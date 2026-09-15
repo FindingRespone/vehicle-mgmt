@@ -61,138 +61,193 @@ export default async function VehicleDetailPage({
   }
 
   return (
-    <div>
-      <div className="mb-6 flex justify-between items-start">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <Link
             href="/vehicles"
-            className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-3 group"
           >
-            ← 返回车辆列表
+            <svg className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            返回车辆列表
           </Link>
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {vehicle.plateNo}
-          </h1>
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                {vehicle.plateNo}
+              </h1>
+              <p className="text-gray-600 mt-1">{vehicle.brandModel}</p>
+            </div>
+          </div>
         </div>
         {session.user.role === 'ADMIN' && (
           <Link
             href={`/vehicles/${vehicle.id}/edit`}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+            className="btn btn-primary"
           >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
             编辑
           </Link>
         )}
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="px-4 py-5 sm:px-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            车辆详细信息
-          </h3>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <div className="card p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              基本信息
+            </h2>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车牌号</dt>
+                <dd className="text-sm font-semibold text-gray-900">{vehicle.plateNo}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车架号 (VIN)</dt>
+                <dd className="text-sm text-gray-900">{vehicle.vin || <span className="text-gray-400">未填写</span>}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">品牌型号</dt>
+                <dd className="text-sm font-medium text-gray-900">{vehicle.brandModel}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车主</dt>
+                <dd className="text-sm text-gray-900 flex items-center">
+                  <svg className="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  {vehicle.owner.name}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="card p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              年检信息
+            </h2>
+            <dl className="space-y-4">
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">年检到期日期</dt>
+                <dd className="text-sm text-gray-900 flex items-center">
+                  <svg className="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  {vehicle.annualInspectionDueAt
+                    ? new Date(vehicle.annualInspectionDueAt).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : <span className="text-gray-400">未设置</span>}
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {vehicle.remark && (
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                备注
+              </h2>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                {vehicle.remark}
+              </p>
+            </div>
+          )}
         </div>
-        <div className="border-t border-gray-200">
-          <dl>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">车牌号</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {vehicle.plateNo}
-              </dd>
-            </div>
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">车架号 (VIN)</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {vehicle.vin || '未填写'}
-              </dd>
-            </div>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">品牌型号</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {vehicle.brandModel}
-              </dd>
-            </div>
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">车辆状态</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    vehicle.status === 'IN_USE'
-                      ? 'bg-green-100 text-green-800'
-                      : vehicle.status === 'MAINTENANCE'
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {statusLabels[vehicle.status]}
-                </span>
-              </dd>
-            </div>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">可用性</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    vehicle.availability === 'AVAILABLE'
-                      ? 'bg-blue-100 text-blue-800'
-                      : vehicle.availability === 'RISK'
-                      ? 'bg-red-100 text-red-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {availabilityLabels[vehicle.availability]}
-                </span>
-              </dd>
-            </div>
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">车主</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {vehicle.owner.name}
-              </dd>
-            </div>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">年检到期日期</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {vehicle.annualInspectionDueAt
-                  ? new Date(vehicle.annualInspectionDueAt).toLocaleDateString(
-                      'zh-CN'
-                    )
-                  : '未设置'}
-              </dd>
-            </div>
-            {vehicle.members.length > 0 && (
-              <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">关联成员</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                  <ul className="space-y-1">
-                    {vehicle.members.map((member) => (
-                      <li key={member.id}>
-                        {member.user.name} ({member.user.username})
-                      </li>
-                    ))}
-                  </ul>
+
+        <div className="space-y-6">
+          <div className="card p-6">
+            <h2 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">状态</h2>
+            <div className="space-y-3">
+              <div>
+                <dt className="text-xs text-gray-500 mb-1.5">车辆状态</dt>
+                <dd>
+                  <span
+                    className={`badge ${
+                      vehicle.status === 'IN_USE'
+                        ? 'bg-green-100 text-green-700'
+                        : vehicle.status === 'MAINTENANCE'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : vehicle.status === 'STOPPED'
+                        ? 'bg-gray-100 text-gray-700'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {statusLabels[vehicle.status]}
+                  </span>
                 </dd>
               </div>
-            )}
-            {vehicle.remark && (
-              <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                <dt className="text-sm font-medium text-gray-500">备注</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-wrap">
-                  {vehicle.remark}
+              <div>
+                <dt className="text-xs text-gray-500 mb-1.5">可用性</dt>
+                <dd>
+                  <span
+                    className={`badge ${
+                      vehicle.availability === 'AVAILABLE'
+                        ? 'bg-blue-100 text-blue-700'
+                        : vehicle.availability === 'RISK'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-gray-100 text-gray-700'
+                    }`}
+                  >
+                    {availabilityLabels[vehicle.availability]}
+                  </span>
                 </dd>
               </div>
-            )}
-            <div className="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">创建时间</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {new Date(vehicle.createdAt).toLocaleString('zh-CN')}
-              </dd>
             </div>
-            <div className="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">更新时间</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                {new Date(vehicle.updatedAt).toLocaleString('zh-CN')}
-              </dd>
+          </div>
+
+          {vehicle.members.length > 0 && (
+            <div className="card p-6">
+              <h2 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">关联成员</h2>
+              <ul className="space-y-2">
+                {vehicle.members.map((member) => (
+                  <li key={member.id} className="flex items-center text-sm">
+                    <div className="w-7 h-7 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-medium text-xs mr-2">
+                      {member.user.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{member.user.name}</p>
+                      <p className="text-xs text-gray-500">{member.user.username}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </dl>
+          )}
+
+          <div className="card p-6">
+            <h2 className="text-sm font-semibold text-gray-900 mb-4 uppercase tracking-wider">时间戳</h2>
+            <dl className="space-y-3 text-xs">
+              <div>
+                <dt className="text-gray-500 mb-1">创建时间</dt>
+                <dd className="text-gray-900 font-mono">
+                  {new Date(vehicle.createdAt).toLocaleString('zh-CN')}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-gray-500 mb-1">更新时间</dt>
+                <dd className="text-gray-900 font-mono">
+                  {new Date(vehicle.updatedAt).toLocaleString('zh-CN')}
+                </dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </div>
     </div>

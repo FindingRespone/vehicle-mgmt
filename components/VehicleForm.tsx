@@ -76,171 +76,205 @@ export default function VehicleForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-        <div className="md:grid md:grid-cols-3 md:gap-6">
-          <div className="md:col-span-1">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">
-              基本信息
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {isEdit ? '编辑' : '添加'}车辆的基本信息
-            </p>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-start">
+          <svg className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+          </svg>
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="card p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            基本信息
+          </h2>
+          <p className="mt-1 text-sm text-gray-600">
+            {isEdit ? '编辑' : '添加'}车辆的基本信息
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <label htmlFor="plateNo" className="block text-sm font-medium text-gray-700 mb-2">
+              车牌号 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="plateNo"
+              id="plateNo"
+              required
+              value={formData.plateNo}
+              onChange={handleChange}
+              disabled={isEdit}
+              placeholder="例: 京A12345"
+              className="input-field disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+            />
+            {isEdit && (
+              <p className="mt-1.5 text-xs text-gray-500 flex items-center">
+                <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                车牌号创建后不可修改
+              </p>
+            )}
           </div>
-          <div className="mt-5 md:mt-0 md:col-span-2">
-            <div className="grid grid-cols-6 gap-6">
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="plateNo"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  车牌号 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="plateNo"
-                  id="plateNo"
-                  required
-                  value={formData.plateNo}
-                  onChange={handleChange}
-                  disabled={isEdit}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 disabled:bg-gray-100"
-                />
-              </div>
 
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="vin"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  车架号 (VIN)
-                </label>
-                <input
-                  type="text"
-                  name="vin"
-                  id="vin"
-                  value={formData.vin}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                />
-              </div>
+          <div>
+            <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-2">
+              车架号 (VIN) <span className="text-gray-400 text-xs">选填</span>
+            </label>
+            <input
+              type="text"
+              name="vin"
+              id="vin"
+              value={formData.vin}
+              onChange={handleChange}
+              placeholder="17位车架号"
+              className="input-field"
+            />
+            <p className="mt-1.5 text-xs text-gray-500">车辆识别代码，可留空</p>
+          </div>
 
-              <div className="col-span-6">
-                <label
-                  htmlFor="brandModel"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  品牌型号 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="brandModel"
-                  id="brandModel"
-                  required
-                  value={formData.brandModel}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                />
-              </div>
+          <div className="md:col-span-2">
+            <label htmlFor="brandModel" className="block text-sm font-medium text-gray-700 mb-2">
+              品牌型号 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="brandModel"
+              id="brandModel"
+              required
+              value={formData.brandModel}
+              onChange={handleChange}
+              placeholder="例: 东风天龙 DFL3310A"
+              className="input-field"
+            />
+          </div>
 
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="status"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  车辆状态
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                >
-                  <option value="IN_USE">使用中</option>
-                  <option value="MAINTENANCE">维护中</option>
-                  <option value="STOPPED">停用</option>
-                  <option value="DISPOSING">处置中</option>
-                </select>
-              </div>
+          <div>
+            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+              车辆状态
+            </label>
+            <select
+              id="status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="IN_USE">使用中</option>
+              <option value="MAINTENANCE">维护中</option>
+              <option value="STOPPED">停用</option>
+              <option value="DISPOSING">处置中</option>
+            </select>
+          </div>
 
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="availability"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  可用性
-                </label>
-                <select
-                  id="availability"
-                  name="availability"
-                  value={formData.availability}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                >
-                  <option value="AVAILABLE">可用</option>
-                  <option value="RISK">风险</option>
-                  <option value="UNAVAILABLE">不可用</option>
-                </select>
-              </div>
-
-              <div className="col-span-6 sm:col-span-3">
-                <label
-                  htmlFor="annualInspectionDueAt"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  年检到期日期
-                </label>
-                <input
-                  type="date"
-                  name="annualInspectionDueAt"
-                  id="annualInspectionDueAt"
-                  value={formData.annualInspectionDueAt}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                />
-              </div>
-
-              <div className="col-span-6">
-                <label
-                  htmlFor="remark"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  备注
-                </label>
-                <textarea
-                  id="remark"
-                  name="remark"
-                  rows={3}
-                  value={formData.remark}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                />
-              </div>
-            </div>
+          <div>
+            <label htmlFor="availability" className="block text-sm font-medium text-gray-700 mb-2">
+              可用性
+            </label>
+            <select
+              id="availability"
+              name="availability"
+              value={formData.availability}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="AVAILABLE">可用</option>
+              <option value="RISK">风险</option>
+              <option value="UNAVAILABLE">不可用</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {error}
+      <div className="card p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            年检信息
+          </h2>
         </div>
-      )}
 
-      <div className="flex justify-end space-x-3">
+        <div>
+          <label htmlFor="annualInspectionDueAt" className="block text-sm font-medium text-gray-700 mb-2">
+            年检到期日期 <span className="text-gray-400 text-xs">选填</span>
+          </label>
+          <input
+            type="date"
+            name="annualInspectionDueAt"
+            id="annualInspectionDueAt"
+            value={formData.annualInspectionDueAt}
+            onChange={handleChange}
+            className="input-field"
+          />
+          <p className="mt-1.5 text-xs text-gray-500">设置车辆年检到期日期以便提醒</p>
+        </div>
+      </div>
+
+      <div className="card p-6">
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            扩展信息
+          </h2>
+          <p className="mt-1 text-sm text-gray-600">预留扩展字段</p>
+        </div>
+
+        <div>
+          <label htmlFor="remark" className="block text-sm font-medium text-gray-700 mb-2">
+            备注 <span className="text-gray-400 text-xs">选填</span>
+          </label>
+          <textarea
+            id="remark"
+            name="remark"
+            rows={4}
+            value={formData.remark}
+            onChange={handleChange}
+            placeholder="可以记录车辆的其他相关信息..."
+            className="input-field resize-none"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
         <button
           type="button"
           onClick={() => router.back()}
-          className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="btn btn-secondary"
         >
           取消
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn btn-primary shadow-lg shadow-blue-500/30"
         >
-          {loading ? '保存中...' : isEdit ? '保存修改' : '创建车辆'}
+          {loading ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              保存中...
+            </span>
+          ) : (
+            <>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              {isEdit ? '保存修改' : '创建车辆'}
+            </>
+          )}
         </button>
       </div>
     </form>
