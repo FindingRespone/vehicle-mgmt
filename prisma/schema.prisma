@@ -26,6 +26,16 @@ enum VehicleAvailability {
   UNAVAILABLE
 }
 
+enum PowerType {
+  EV
+  FUEL
+}
+
+enum VehicleClass {
+  TRUCK_4_2
+  OTHER
+}
+
 enum AttachmentCategory {
   DRIVING_LICENSE
   VEHICLE_PHOTO
@@ -52,6 +62,8 @@ model Vehicle {
   plateNo                 String               @unique
   vin                     String?
   brandModel              String
+  powerType               PowerType?
+  vehicleClass            VehicleClass?
   status                  VehicleStatus        @default(IN_USE)
   availability            VehicleAvailability  @default(AVAILABLE)
   ownerUserId             String

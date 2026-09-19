@@ -80,28 +80,16 @@ export async function POST(
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: '只有管理员可以上传附件' }, { status: 403 });
+    }
+
     const vehicle = await prisma.vehicle.findUnique({
       where: { id },
-      include: {
-        members: {
-          select: { userId: true },
-        },
-      },
     });
 
     if (!vehicle) {
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
-    }
-
-    if (session.user.role === 'FINANCE_READONLY') {
-      return NextResponse.json({ error: '无上传权限' }, { status: 403 });
-    }
-
-    if (session.user.role !== 'ADMIN') {
-      const isMember = vehicle.members.some((m) => m.userId === session.user.id);
-      if (vehicle.ownerUserId !== session.user.id && !isMember) {
-        return NextResponse.json({ error: '无权限' }, { status: 403 });
-      }
     }
 
     const formData = await request.formData();
@@ -119,10 +107,6 @@ export async function POST(
     const validCategories = ['DRIVING_LICENSE', 'VEHICLE_PHOTO', 'INSURANCE', 'LOAN_CONTRACT', 'OTHER'];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: '无效的类别' }, { status: 400 });
-    }
-
-    if (category === 'LOAN_CONTRACT' && session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: '只有管理员可以上传贷款合同' }, { status: 403 });
     }
 
     type AttachmentCategory = 'DRIVING_LICENSE' | 'VEHICLE_PHOTO' | 'INSURANCE' | 'LOAN_CONTRACT' | 'OTHER';

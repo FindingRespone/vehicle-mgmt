@@ -16,6 +16,16 @@ const availabilityLabels: Record<VehicleAvailability, string> = {
   UNAVAILABLE: '不可用',
 };
 
+const powerTypeLabels = {
+  EV: '电车',
+  FUEL: '油车',
+};
+
+const vehicleClassLabels = {
+  TRUCK_4_2: '4.2米货车',
+  OTHER: '其他车型',
+};
+
 interface SearchParams {
   page?: string;
   search?: string;
@@ -232,6 +242,12 @@ export default async function VehiclesPage({
                     品牌型号
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    动力类型
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    车辆类型
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     状态
                   </th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -265,6 +281,28 @@ export default async function VehiclesPage({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{vehicle.brandModel}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {vehicle.powerType ? (
+                        <span className={`badge ${
+                          vehicle.powerType === 'EV' 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {powerTypeLabels[vehicle.powerType as keyof typeof powerTypeLabels]}
+                        </span>
+                      ) : (
+                        <div className="text-sm text-gray-400">-</div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {vehicle.vehicleClass ? (
+                        <span className="badge bg-indigo-100 text-indigo-700">
+                          {vehicleClassLabels[vehicle.vehicleClass as keyof typeof vehicleClassLabels]}
+                        </span>
+                      ) : (
+                        <div className="text-sm text-gray-400">-</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span

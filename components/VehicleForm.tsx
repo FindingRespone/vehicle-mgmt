@@ -18,6 +18,8 @@ export default function VehicleForm({
     plateNo: vehicle?.plateNo || '',
     vin: vehicle?.vin || '',
     brandModel: vehicle?.brandModel || '',
+    powerType: vehicle?.powerType || '',
+    vehicleClass: vehicle?.vehicleClass || '',
     status: vehicle?.status || 'IN_USE',
     availability: vehicle?.availability || 'AVAILABLE',
     annualInspectionDueAt: vehicle?.annualInspectionDueAt
@@ -154,6 +156,40 @@ export default function VehicleForm({
               placeholder="例: 东风天龙 DFL3310A"
               className="input-field"
             />
+          </div>
+
+          <div>
+            <label htmlFor="powerType" className="block text-sm font-medium text-gray-700 mb-2">
+              动力类型 <span className="text-gray-400 text-xs">选填</span>
+            </label>
+            <select
+              id="powerType"
+              name="powerType"
+              value={formData.powerType}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="">请选择</option>
+              <option value="EV">电车</option>
+              <option value="FUEL">油车</option>
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="vehicleClass" className="block text-sm font-medium text-gray-700 mb-2">
+              车辆类型 <span className="text-gray-400 text-xs">选填</span>
+            </label>
+            <select
+              id="vehicleClass"
+              name="vehicleClass"
+              value={formData.vehicleClass}
+              onChange={handleChange}
+              className="input-field"
+            >
+              <option value="">请选择</option>
+              <option value="TRUCK_4_2">4.2米货车</option>
+              <option value="OTHER">其他车型</option>
+            </select>
           </div>
 
           <div>

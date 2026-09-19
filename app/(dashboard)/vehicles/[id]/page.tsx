@@ -17,6 +17,16 @@ const availabilityLabels = {
   UNAVAILABLE: '不可用',
 };
 
+const powerTypeLabels = {
+  EV: '电车',
+  FUEL: '油车',
+};
+
+const vehicleClassLabels = {
+  TRUCK_4_2: '4.2米货车',
+  OTHER: '其他车型',
+};
+
 export default async function VehicleDetailPage({
   params,
 }: {
@@ -72,7 +82,6 @@ export default async function VehicleDetailPage({
   const hasDrivingLicense = vehicle.attachments.some(a => a.category === 'DRIVING_LICENSE');
   const hasVehiclePhoto = vehicle.attachments.some(a => a.category === 'VEHICLE_PHOTO');
   const isMissingDocs = !hasDrivingLicense || !hasVehiclePhoto;
-  const canUpload = session.user.role !== 'FINANCE_READONLY';
 
   return (
     <div className="space-y-6">
@@ -145,6 +154,34 @@ export default async function VehicleDetailPage({
                   {vehicle.owner.name}
                 </dd>
               </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">动力类型</dt>
+                <dd>
+                  {vehicle.powerType ? (
+                    <span className={`badge ${
+                      vehicle.powerType === 'EV' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {powerTypeLabels[vehicle.powerType as keyof typeof powerTypeLabels]}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400">未填写</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车辆类型</dt>
+                <dd>
+                  {vehicle.vehicleClass ? (
+                    <span className="badge bg-indigo-100 text-indigo-700">
+                      {vehicleClassLabels[vehicle.vehicleClass as keyof typeof vehicleClassLabels]}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-400">未填写</span>
+                  )}
+                </dd>
+              </div>
             </dl>
           </div>
 
@@ -170,7 +207,7 @@ export default async function VehicleDetailPage({
             </dl>
           </div>
 
-          <AttachmentSection vehicleId={vehicle.id} canUpload={canUpload} userRole={session.user.role} />
+          <AttachmentSection vehicleId={vehicle.id} canUpload={session.user.role === 'ADMIN'} userRole={session.user.role} />
 
           {vehicle.remark && (
             <div className="card p-6">

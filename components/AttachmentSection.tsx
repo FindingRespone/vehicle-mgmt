@@ -41,6 +41,7 @@ export default function AttachmentSection({
 }) {
   const router = useRouter();
   const isAdmin = userRole === 'ADMIN';
+  const canManageAttachments = isAdmin;
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,11 +173,9 @@ export default function AttachmentSection({
 
   const availableCategories = isAdmin 
     ? Object.keys(categoryLabels)
-    : Object.keys(categoryLabels).filter(cat => cat !== 'LOAN_CONTRACT');
+    : [];
 
-  const visibleAttachments = isAdmin
-    ? attachments
-    : attachments.filter(a => a.category !== 'LOAN_CONTRACT');
+  const visibleAttachments = attachments;
 
   const groupedAttachments = visibleAttachments.reduce((acc, attachment) => {
     if (!acc[attachment.category]) {
@@ -229,7 +228,7 @@ export default function AttachmentSection({
         </div>
       )}
 
-      {canUpload && (
+      {canManageAttachments && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
@@ -305,7 +304,7 @@ export default function AttachmentSection({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
           </svg>
           <p className="text-sm">暂无附件</p>
-          {canUpload && <p className="text-xs text-gray-400 mt-1">请上传行驶证和车辆照片</p>}
+          {canManageAttachments && <p className="text-xs text-gray-400 mt-1">请上传行驶证和车辆照片</p>}
         </div>
       ) : (
         <div className="space-y-6">
@@ -356,7 +355,7 @@ export default function AttachmentSection({
                         <span>{formatFileSize(attachment.filesize)}</span>
                         <span>{new Date(attachment.createdAt).toLocaleDateString('zh-CN')}</span>
                       </div>
-                      {canUpload && (
+                      {canManageAttachments && (
                         <button
                           onClick={() => handleDelete(attachment.id, attachment.originalFilename)}
                           className="w-full mt-2 px-2 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex items-center justify-center"

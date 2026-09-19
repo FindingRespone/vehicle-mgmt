@@ -17,6 +17,8 @@ export async function POST(request: Request) {
         plateNo: data.plateNo,
         vin: data.vin || null,
         brandModel: data.brandModel,
+        powerType: data.powerType || null,
+        vehicleClass: data.vehicleClass || null,
         status: data.status || 'IN_USE',
         availability: data.availability || 'AVAILABLE',
         ownerUserId: session.user!.id,
