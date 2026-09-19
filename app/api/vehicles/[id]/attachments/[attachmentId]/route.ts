@@ -48,7 +48,7 @@ export async function GET(
       return NextResponse.json({ error: '附件不存在' }, { status: 404 });
     }
 
-    const filepath = join(process.cwd(), attachment.filepath);
+    const filepath = join(/*turbopackIgnore: true*/ process.cwd(), attachment.filepath);
     const fileBuffer = await readFile(filepath);
 
     return new NextResponse(fileBuffer, {

@@ -117,6 +117,9 @@ export async function POST(
       return NextResponse.json({ error: '无效的类别' }, { status: 400 });
     }
 
+    type AttachmentCategory = 'DRIVING_LICENSE' | 'VEHICLE_PHOTO' | 'INSURANCE' | 'LOAN_CONTRACT' | 'OTHER';
+    const attachmentCategory = category as AttachmentCategory;
+
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       return NextResponse.json({ error: '文件大小不能超过10MB' }, { status: 400 });
@@ -153,7 +156,7 @@ export async function POST(
 
     const attachment = await prisma.attachment.create({
       data: {
-        category,
+        category: attachmentCategory,
         filename,
         originalFilename: file.name,
         filepath: `uploads/${id}/${filename}`,
