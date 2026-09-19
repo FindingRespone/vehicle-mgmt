@@ -74,6 +74,8 @@ export async function PUT(
       where: { id },
       data: {
         brandModel: data.brandModel,
+        powerType: data.powerType || null,
+        vehicleClass: data.vehicleClass || null,
         status: data.status,
         availability: data.availability,
         annualInspectionDueAt: data.annualInspectionDueAt

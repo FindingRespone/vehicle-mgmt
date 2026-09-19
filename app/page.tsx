@@ -7,6 +7,6 @@ export default async function Home() {
   if (!session) {
     redirect('/login');
   }
-  
-  redirect('/vehicles');
+    
+  redirect('/dashboard');
 }
