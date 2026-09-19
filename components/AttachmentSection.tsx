@@ -33,11 +33,15 @@ const categoryColors = {
 export default function AttachmentSection({
   vehicleId,
   canUpload = true,
+  userRole = 'VEHICLE_MEMBER',
 }: {
   vehicleId: string;
   canUpload?: boolean;
+  userRole?: 'ADMIN' | 'VEHICLE_MEMBER' | 'FINANCE_READONLY';
 }) {
   const router = useRouter();
+  const isAdmin = userRole === 'ADMIN';
+  
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -46,6 +50,12 @@ export default function AttachmentSection({
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('DRIVING_LICENSE');
+
+  useEffect(() => {
+    if (!isAdmin && selectedCategory === 'LOAN_CONTRACT') {
+      setSelectedCategory('DRIVING_LICENSE');
+    }
+  }, [isAdmin, selectedCategory]);
 
   useEffect(() => {
     fetchAttachments();
@@ -153,7 +163,7 @@ export default function AttachmentSection({
     return mimeType.startsWith('image/');
   };
 
-  const groupedAttachments = attachments.reduce((acc, attachment) => {
+  const groupedAttachments = visibleAttachments.reduce((acc, attachment) => {
     if (!acc[attachment.category]) {
       acc[attachment.category] = [];
     }
@@ -164,6 +174,21 @@ export default function AttachmentSection({
   const hasDrivingLicense = attachments.some(a => a.category === 'DRIVING_LICENSE');
   const hasVehiclePhoto = attachments.some(a => a.category === 'VEHICLE_PHOTO');
   const isMissing = !hasDrivingLicense || !hasVehiclePhoto;
+
+  const getMissingDocsText = () => {
+    const missing: string[] = [];
+    if (!hasDrivingLicense) missing.push('行驶证图片');
+    if (!hasVehiclePhoto) missing.push('车辆外观照片');
+    return missing.length > 0 ? `缺少：${missing.join('、')}` : '';
+  };
+
+  const availableCategories = isAdmin 
+    ? Object.keys(categoryLabels)
+    : Object.keys(categoryLabels).filter(cat => cat !== 'LOAN_CONTRACT');
+
+  const visibleAttachments = isAdmin
+    ? attachments
+    : attachments.filter(a => a.category !== 'LOAN_CONTRACT');
 
   return (
     <div className="card p-6">
@@ -176,7 +201,10 @@ export default function AttachmentSection({
             证照与照片
           </h2>
           {isMissing && (
-            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-2">
+            <span 
+              className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-2 cursor-help" 
+              title={getMissingDocsText()}
+            >
               <svg className="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
@@ -213,11 +241,11 @@ export default function AttachmentSection({
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="input-field text-sm"
               >
-                <option value="DRIVING_LICENSE">行驶证</option>
-                <option value="VEHICLE_PHOTO">车辆照片</option>
-                <option value="INSURANCE">保险单</option>
-                <option value="LOAN_CONTRACT">贷款合同</option>
-                <option value="OTHER">其他</option>
+                {availableCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {categoryLabels[category as keyof typeof categoryLabels]}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
@@ -271,7 +299,7 @@ export default function AttachmentSection({
           </svg>
           加载中...
         </div>
-      ) : attachments.length === 0 ? (
+      ) : visibleAttachments.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <svg className="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />

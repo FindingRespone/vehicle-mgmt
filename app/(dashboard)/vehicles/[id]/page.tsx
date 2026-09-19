@@ -170,7 +170,7 @@ export default async function VehicleDetailPage({
             </dl>
           </div>
 
-          <AttachmentSection vehicleId={vehicle.id} canUpload={canUpload} />
+          <AttachmentSection vehicleId={vehicle.id} canUpload={canUpload} userRole={session.user.role} />
 
           {vehicle.remark && (
             <div className="card p-6">
@@ -229,7 +229,10 @@ export default async function VehicleDetailPage({
                 <div>
                   <dt className="text-xs text-gray-500 mb-1.5">证照状态</dt>
                   <dd>
-                    <span className="badge bg-yellow-100 text-yellow-800">
+                    <span 
+                      className="badge bg-yellow-100 text-yellow-800 cursor-help" 
+                      title={`缺少：${!hasDrivingLicense ? '行驶证图片' : ''}${!hasDrivingLicense && !hasVehiclePhoto ? '、' : ''}${!hasVehiclePhoto ? '车辆外观照片' : ''}`}
+                    >
                       影像不完整
                     </span>
                   </dd>

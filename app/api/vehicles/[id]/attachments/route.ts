@@ -57,7 +57,11 @@ export async function GET(
       },
     });
 
-    return NextResponse.json(attachments);
+    const filteredAttachments = session.user.role === 'ADMIN'
+      ? attachments
+      : attachments.filter(a => a.category !== 'LOAN_CONTRACT');
+
+    return NextResponse.json(filteredAttachments);
   } catch (error) {
     console.error('Get attachments error:', error);
     return NextResponse.json({ error: '查询失败' }, { status: 500 });
@@ -115,6 +119,10 @@ export async function POST(
     const validCategories = ['DRIVING_LICENSE', 'VEHICLE_PHOTO', 'INSURANCE', 'LOAN_CONTRACT', 'OTHER'];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: '无效的类别' }, { status: 400 });
+    }
+
+    if (category === 'LOAN_CONTRACT' && session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: '只有管理员可以上传贷款合同' }, { status: 403 });
     }
 
     type AttachmentCategory = 'DRIVING_LICENSE' | 'VEHICLE_PHOTO' | 'INSURANCE' | 'LOAN_CONTRACT' | 'OTHER';

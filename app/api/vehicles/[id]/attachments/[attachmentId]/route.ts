@@ -48,6 +48,10 @@ export async function GET(
       return NextResponse.json({ error: '附件不存在' }, { status: 404 });
     }
 
+    if (attachment.category === 'LOAN_CONTRACT' && session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: '只有管理员可以查看贷款合同' }, { status: 403 });
+    }
+
     const filepath = join(/*turbopackIgnore: true*/ process.cwd(), attachment.filepath);
     const fileBuffer = await readFile(filepath);
 
@@ -110,6 +114,10 @@ export async function DELETE(
 
     if (!attachment) {
       return NextResponse.json({ error: '附件不存在' }, { status: 404 });
+    }
+
+    if (attachment.category === 'LOAN_CONTRACT' && session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: '只有管理员可以删除贷款合同' }, { status: 403 });
     }
 
     await prisma.attachment.update({
