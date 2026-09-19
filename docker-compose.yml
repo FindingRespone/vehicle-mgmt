@@ -34,7 +34,9 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
+      - uploads_data:/app/uploads
     command: sh -c "npx prisma generate && npx prisma db push && npm run dev"
 
 volumes:
   postgres_data:
+  uploads_data:

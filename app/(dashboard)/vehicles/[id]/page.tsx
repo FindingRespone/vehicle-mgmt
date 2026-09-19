@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
+import AttachmentSection from '@/components/AttachmentSection';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -46,6 +47,14 @@ export default async function VehicleDetailPage({
           },
         },
       },
+      attachments: {
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          category: true,
+        },
+      },
     },
   });
 
@@ -59,6 +68,11 @@ export default async function VehicleDetailPage({
       redirect('/vehicles');
     }
   }
+
+  const hasDrivingLicense = vehicle.attachments.some(a => a.category === 'DRIVING_LICENSE');
+  const hasVehiclePhoto = vehicle.attachments.some(a => a.category === 'VEHICLE_PHOTO');
+  const isMissingDocs = !hasDrivingLicense || !hasVehiclePhoto;
+  const canUpload = session.user.role !== 'FINANCE_READONLY';
 
   return (
     <div className="space-y-6">
@@ -156,6 +170,8 @@ export default async function VehicleDetailPage({
             </dl>
           </div>
 
+          <AttachmentSection vehicleId={vehicle.id} canUpload={canUpload} />
+
           {vehicle.remark && (
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -209,6 +225,16 @@ export default async function VehicleDetailPage({
                   </span>
                 </dd>
               </div>
+              {isMissingDocs && (
+                <div>
+                  <dt className="text-xs text-gray-500 mb-1.5">证照状态</dt>
+                  <dd>
+                    <span className="badge bg-yellow-100 text-yellow-800">
+                      影像不完整
+                    </span>
+                  </dd>
+                </div>
+              )}
             </div>
           </div>
 
