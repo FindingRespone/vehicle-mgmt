@@ -159,18 +159,6 @@ export default function AttachmentSection({
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
-  const isImage = (mimeType: string) => {
-    return mimeType.startsWith('image/');
-  };
-
-  const groupedAttachments = visibleAttachments.reduce((acc, attachment) => {
-    if (!acc[attachment.category]) {
-      acc[attachment.category] = [];
-    }
-    acc[attachment.category].push(attachment);
-    return acc;
-  }, {} as Record<string, Attachment[]>);
-
   const hasDrivingLicense = attachments.some(a => a.category === 'DRIVING_LICENSE');
   const hasVehiclePhoto = attachments.some(a => a.category === 'VEHICLE_PHOTO');
   const isMissing = !hasDrivingLicense || !hasVehiclePhoto;
@@ -189,6 +177,18 @@ export default function AttachmentSection({
   const visibleAttachments = isAdmin
     ? attachments
     : attachments.filter(a => a.category !== 'LOAN_CONTRACT');
+
+  const groupedAttachments = visibleAttachments.reduce((acc, attachment) => {
+    if (!acc[attachment.category]) {
+      acc[attachment.category] = [];
+    }
+    acc[attachment.category].push(attachment);
+    return acc;
+  }, {} as Record<string, Attachment[]>);
+
+  const isImage = (mimeType: string) => {
+    return mimeType.startsWith('image/');
+  };
 
   return (
     <div className="card p-6">
