@@ -125,7 +125,7 @@ export default async function VehiclesPage({
             name: true,
           },
         },
-        policies: {
+        insurancePolicies: {
           select: {
             endDate: true,
             insuranceType: true,
@@ -173,7 +173,7 @@ export default async function VehiclesPage({
   let filteredVehicles = vehicles;
   if (insuranceStatusFilter) {
     filteredVehicles = vehicles.filter((vehicle) => {
-      return getInsuranceStatus(vehicle.policies) === insuranceStatusFilter;
+      return getInsuranceStatus(vehicle.insurancePolicies) === insuranceStatusFilter;
     });
   }
 
@@ -324,7 +324,7 @@ export default async function VehiclesPage({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredVehicles.map((vehicle) => {
-                  const insuranceStatus = getInsuranceStatus(vehicle.policies);
+                  const insuranceStatus = getInsuranceStatus(vehicle.insurancePolicies);
                   return (
                   <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
