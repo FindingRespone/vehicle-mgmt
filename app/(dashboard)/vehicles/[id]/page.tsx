@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import AttachmentSection from '@/components/AttachmentSection';
 import VehicleMemberManagement from '@/components/VehicleMemberManagement';
+import InsurancePolicySection from '@/components/InsurancePolicySection';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -213,6 +214,8 @@ export default async function VehicleDetailPage({
               </div>
             </dl>
           </div>
+
+          <InsurancePolicySection vehicleId={vehicle.id} canManage={isManager} />
 
           <AttachmentSection vehicleId={vehicle.id} canUpload={isManager} userRole={session.user.role} />
 

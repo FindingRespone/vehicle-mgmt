@@ -27,6 +27,7 @@ export default async function DashboardPage() {
   let availableVehicles = 0;
   let riskVehicles = 0;
   let inUseVehicles = 0;
+  let expiringPoliciesCount = 0;
   let upcomingExpirations: any[] = [];
 
   if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') {
@@ -40,6 +41,19 @@ export default async function DashboardPage() {
     });
     inUseVehicles = await prisma.vehicle.count({
       where: { status: 'IN_USE' },
+    });
+
+    // Get count of insurance policies expiring within 30 days
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    expiringPoliciesCount = await prisma.insurancePolicy.count({
+      where: {
+        endDate: {
+          lte: thirtyDaysFromNow,
+          gte: new Date(),
+        },
+      },
     });
 
     // Get vehicles with annual inspection due in next 60 days
@@ -102,6 +116,20 @@ export default async function DashboardPage() {
       },
     });
 
+    // Get count of insurance policies expiring within 30 days for user's vehicles
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    expiringPoliciesCount = await prisma.insurancePolicy.count({
+      where: {
+        vehicle: userFilter,
+        endDate: {
+          lte: thirtyDaysFromNow,
+          gte: new Date(),
+        },
+      },
+    });
+
     const sixtyDaysFromNow = new Date();
     sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
     
@@ -135,7 +163,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5">
         <div className="card p-6 hover:shadow-md transition-shadow">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -210,6 +238,26 @@ export default async function DashboardPage() {
                 <dt className="text-sm font-medium text-gray-500 truncate">风险车辆</dt>
                 <dd className="flex items-baseline">
                   <div className="text-2xl font-semibold text-gray-900">{riskVehicles}</div>
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="flex items-center justify-center h-12 w-12 rounded-md bg-purple-500 text-white">
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">即将到期保单</dt>
+                <dd className="flex items-baseline">
+                  <div className="text-2xl font-semibold text-gray-900">{expiringPoliciesCount}</div>
                 </dd>
               </dl>
             </div>
