@@ -15,8 +15,9 @@ export default function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
   
   const roleLabels = {
+    VEHICLE_MEMBER: '普通',
     ADMIN: '管理员',
-    VEHICLE_MEMBER: '车辆管理员',
+    SUPER_ADMIN: '超级管理员',
     FINANCE_READONLY: '财务只读',
   };
 

@@ -37,11 +37,11 @@ export default function AttachmentSection({
 }: {
   vehicleId: string;
   canUpload?: boolean;
-  userRole?: 'ADMIN' | 'VEHICLE_MEMBER' | 'FINANCE_READONLY';
+  userRole?: 'ADMIN' | 'VEHICLE_MEMBER' | 'SUPER_ADMIN' | 'FINANCE_READONLY';
 }) {
   const router = useRouter();
-  const isAdmin = userRole === 'ADMIN';
-  const canManageAttachments = isAdmin;
+  const canManageAttachments = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+  const canAccessLoan = userRole === 'SUPER_ADMIN';
   
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +53,10 @@ export default function AttachmentSection({
   const [selectedCategory, setSelectedCategory] = useState('DRIVING_LICENSE');
 
   useEffect(() => {
-    if (!isAdmin && selectedCategory === 'LOAN_CONTRACT') {
+    if (!canAccessLoan && selectedCategory === 'LOAN_CONTRACT') {
       setSelectedCategory('DRIVING_LICENSE');
     }
-  }, [isAdmin, selectedCategory]);
+  }, [canAccessLoan, selectedCategory]);
 
   useEffect(() => {
     fetchAttachments();
@@ -171,8 +171,10 @@ export default function AttachmentSection({
     return missing.length > 0 ? `缺少：${missing.join('、')}` : '';
   };
 
-  const availableCategories = isAdmin 
-    ? Object.keys(categoryLabels)
+  const availableCategories = canManageAttachments
+    ? Object.keys(categoryLabels).filter(
+        (c) => c !== 'LOAN_CONTRACT' || canAccessLoan
+      )
     : [];
 
   const visibleAttachments = attachments;
@@ -355,7 +357,7 @@ export default function AttachmentSection({
                         <span>{formatFileSize(attachment.filesize)}</span>
                         <span>{new Date(attachment.createdAt).toLocaleDateString('zh-CN')}</span>
                       </div>
-                      {canManageAttachments && (
+                      {canManageAttachments && (attachment.category !== 'LOAN_CONTRACT' || canAccessLoan) && (
                         <button
                           onClick={() => handleDelete(attachment.id, attachment.originalFilename)}
                           className="w-full mt-2 px-2 py-1.5 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors flex items-center justify-center"

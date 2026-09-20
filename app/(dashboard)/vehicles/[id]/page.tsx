@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import AttachmentSection from '@/components/AttachmentSection';
+import VehicleMemberManagement from '@/components/VehicleMemberManagement';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -44,13 +45,16 @@ export default async function VehicleDetailPage({
     include: {
       owner: {
         select: {
+          id: true,
           name: true,
+          username: true,
         },
       },
       members: {
         include: {
           user: {
             select: {
+              id: true,
               name: true,
               username: true,
             },
@@ -72,7 +76,10 @@ export default async function VehicleDetailPage({
     notFound();
   }
 
-  if (session.user.role !== 'ADMIN') {
+  const isManager =
+    session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+
+  if (!isManager) {
     const isMember = vehicle.members.some((m) => m.userId === session.user.id);
     if (vehicle.ownerUserId !== session.user.id && !isMember) {
       redirect('/vehicles');
@@ -110,7 +117,7 @@ export default async function VehicleDetailPage({
             </div>
           </div>
         </div>
-        {session.user.role === 'ADMIN' && (
+        {isManager && (
           <Link
             href={`/vehicles/${vehicle.id}/edit`}
             className="btn btn-primary"
@@ -146,7 +153,7 @@ export default async function VehicleDetailPage({
                 <dd className="text-sm font-medium text-gray-900">{vehicle.brandModel}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车主</dt>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">负责人</dt>
                 <dd className="text-sm text-gray-900 flex items-center">
                   <svg className="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -207,7 +214,28 @@ export default async function VehicleDetailPage({
             </dl>
           </div>
 
-          <AttachmentSection vehicleId={vehicle.id} canUpload={session.user.role === 'ADMIN'} userRole={session.user.role} />
+          <AttachmentSection vehicleId={vehicle.id} canUpload={isManager} userRole={session.user.role} />
+
+          {isManager && (
+            <VehicleMemberManagement
+              vehicleId={vehicle.id}
+              initialOwner={{
+                id: vehicle.owner.id,
+                name: vehicle.owner.name,
+                username: vehicle.owner.username,
+              }}
+              initialMembers={vehicle.members.map((m) => ({
+                id: m.id,
+                userId: m.userId,
+                user: {
+                  id: m.user.id,
+                  name: m.user.name,
+                  username: m.user.username,
+                  role: '',
+                },
+              }))}
+            />
+          )}
 
           {vehicle.remark && (
             <div className="card p-6">

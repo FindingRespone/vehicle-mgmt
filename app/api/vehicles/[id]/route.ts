@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -41,7 +42,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (session.user.role !== 'ADMIN') {
+    if (!isAdminOrAbove(session.user.role)) {
       const isMember = vehicle.members.some(
         (m) => m.userId === session.user.id
       );
@@ -64,7 +65,7 @@ export async function PUT(
     const session = await auth();
     const { id } = await params;
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !canManageVehicles(session.user.role)) {
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
@@ -83,6 +84,7 @@ export async function PUT(
           : null,
         remark: data.remark || null,
         vin: data.vin || null,
+        ...(data.ownerUserId ? { ownerUserId: data.ownerUserId } : {}),
       },
     });
 
@@ -111,7 +113,7 @@ export async function DELETE(
     const session = await auth();
     const { id } = await params;
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !canManageVehicles(session.user.role)) {
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 

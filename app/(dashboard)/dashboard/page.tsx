@@ -29,7 +29,7 @@ export default async function DashboardPage() {
   let inUseVehicles = 0;
   let upcomingExpirations: any[] = [];
 
-  if (session.user.role === 'ADMIN') {
+  if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') {
     // Admin sees all vehicles
     totalVehicles = await prisma.vehicle.count();
     availableVehicles = await prisma.vehicle.count({

@@ -112,11 +112,15 @@ export default function LoginPage() {
             <p className="text-xs text-gray-500 text-center mb-3">测试账号</p>
             <div className="space-y-2 text-xs text-gray-600">
               <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
+                <span className="font-medium">超级管理员</span>
+                <span className="text-gray-500">superadmin / superadmin123</span>
+              </div>
+              <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
                 <span className="font-medium">管理员</span>
                 <span className="text-gray-500">admin / admin123</span>
               </div>
               <div className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-lg">
-                <span className="font-medium">车辆管理员</span>
+                <span className="font-medium">普通成员</span>
                 <span className="text-gray-500">member / member123</span>
               </div>
             </div>

@@ -1,12 +1,13 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
     const session = await auth();
 
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !canManageVehicles(session.user.role)) {
       return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
         vehicleClass: data.vehicleClass || null,
         status: data.status || 'IN_USE',
         availability: data.availability || 'AVAILABLE',
-        ownerUserId: session.user!.id,
+        ownerUserId: data.ownerUserId || session.user!.id,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,
@@ -59,7 +60,7 @@ export async function GET(request: Request) {
 
     let vehicles;
 
-    if (session.user!.role === 'ADMIN') {
+    if (isAdminOrAbove(session.user!.role)) {
       vehicles = await prisma.vehicle.findMany({
         include: {
           owner: {

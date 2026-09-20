@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canAccessLoanContract, canManageVehicles, isAdminOrAbove } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -30,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (session.user.role !== 'ADMIN') {
+    if (!isAdminOrAbove(session.user.role)) {
       const isMember = vehicle.members.some((m) => m.userId === session.user.id);
       if (vehicle.ownerUserId !== session.user.id && !isMember) {
         return NextResponse.json({ error: '无权限' }, { status: 403 });
@@ -41,6 +42,10 @@ export async function GET(
       where: {
         vehicleId: id,
         deletedAt: null,
+        // Filter LOAN_CONTRACT at query level for non-super-admins
+        ...(canAccessLoanContract(session.user.role)
+          ? {}
+          : { category: { not: 'LOAN_CONTRACT' } }),
       },
       orderBy: {
         createdAt: 'desc',
@@ -57,11 +62,7 @@ export async function GET(
       },
     });
 
-    const filteredAttachments = session.user.role === 'ADMIN'
-      ? attachments
-      : attachments.filter(a => a.category !== 'LOAN_CONTRACT');
-
-    return NextResponse.json(filteredAttachments);
+    return NextResponse.json(attachments);
   } catch (error) {
     console.error('Get attachments error:', error);
     return NextResponse.json({ error: '查询失败' }, { status: 500 });
@@ -80,7 +81,7 @@ export async function POST(
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
-    if (session.user.role !== 'ADMIN') {
+    if (!canManageVehicles(session.user.role)) {
       return NextResponse.json({ error: '只有管理员可以上传附件' }, { status: 403 });
     }
 
@@ -107,6 +108,10 @@ export async function POST(
     const validCategories = ['DRIVING_LICENSE', 'VEHICLE_PHOTO', 'INSURANCE', 'LOAN_CONTRACT', 'OTHER'];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: '无效的类别' }, { status: 400 });
+    }
+
+    if (category === 'LOAN_CONTRACT' && !canAccessLoanContract(session.user.role)) {
+      return NextResponse.json({ error: '只有超级管理员可以上传贷款合同' }, { status: 403 });
     }
 
     type AttachmentCategory = 'DRIVING_LICENSE' | 'VEHICLE_PHOTO' | 'INSURANCE' | 'LOAN_CONTRACT' | 'OTHER';

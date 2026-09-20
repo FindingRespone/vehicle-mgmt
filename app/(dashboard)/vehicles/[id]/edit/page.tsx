@@ -12,7 +12,7 @@ export default async function EditVehiclePage({
   const session = await auth();
   const { id } = await params;
 
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN')) {
     redirect('/vehicles');
   }
 

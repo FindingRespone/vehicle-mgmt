@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canAccessLoanContract, canManageVehicles, isAdminOrAbove } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -29,7 +30,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (session.user.role !== 'ADMIN') {
+    if (!isAdminOrAbove(session.user.role)) {
       const isMember = vehicle.members.some((m) => m.userId === session.user.id);
       if (vehicle.ownerUserId !== session.user.id && !isMember) {
         return NextResponse.json({ error: '无权限' }, { status: 403 });
@@ -48,8 +49,8 @@ export async function GET(
       return NextResponse.json({ error: '附件不存在' }, { status: 404 });
     }
 
-    if (attachment.category === 'LOAN_CONTRACT' && session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: '只有管理员可以查看贷款合同' }, { status: 403 });
+    if (attachment.category === 'LOAN_CONTRACT' && !canAccessLoanContract(session.user.role)) {
+      return NextResponse.json({ error: '只有超级管理员可以查看贷款合同' }, { status: 403 });
     }
 
     const filepath = join(/*turbopackIgnore: true*/ process.cwd(), attachment.filepath);
@@ -80,7 +81,7 @@ export async function DELETE(
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
-    if (session.user.role !== 'ADMIN') {
+    if (!canManageVehicles(session.user.role)) {
       return NextResponse.json({ error: '只有管理员可以删除附件' }, { status: 403 });
     }
 
@@ -102,6 +103,10 @@ export async function DELETE(
 
     if (!attachment) {
       return NextResponse.json({ error: '附件不存在' }, { status: 404 });
+    }
+
+    if (attachment.category === 'LOAN_CONTRACT' && !canAccessLoanContract(session.user.role)) {
+      return NextResponse.json({ error: '只有超级管理员可以删除贷款合同' }, { status: 403 });
     }
 
     await prisma.attachment.update({

@@ -56,7 +56,7 @@ export default async function VehiclesPage({
   let where: any = {};
 
   // RBAC: Filter by user permissions
-  if (session.user.role !== 'ADMIN') {
+  if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
     where.OR = [
       { ownerUserId: session.user.id },
       {
@@ -78,7 +78,7 @@ export default async function VehiclesPage({
     ];
     
     // If RBAC filter exists, combine with search
-    if (session.user.role !== 'ADMIN') {
+    if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
       where.AND = [
         {
           OR: [
@@ -145,7 +145,7 @@ export default async function VehiclesPage({
             共 <span className="font-semibold mx-1">{totalCount}</span> 辆车辆
           </p>
         </div>
-        {session.user.role === 'ADMIN' && (
+        {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && (
           <Link
             href="/vehicles/new"
             className="btn btn-primary shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
@@ -217,7 +217,7 @@ export default async function VehiclesPage({
               ? '尝试调整搜索条件或清除筛选'
               : '还没有添加任何车辆信息'}
           </p>
-          {session.user.role === 'ADMIN' && !search && !statusFilter && !availabilityFilter && (
+          {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && !search && !statusFilter && !availabilityFilter && (
             <Link
               href="/vehicles/new"
               className="btn btn-primary inline-flex"
@@ -351,7 +351,7 @@ export default async function VehiclesPage({
                       >
                         查看
                       </Link>
-                      {session.user.role === 'ADMIN' && (
+                      {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && (
                         <>
                           <span className="mx-2 text-gray-300">|</span>
                           <Link

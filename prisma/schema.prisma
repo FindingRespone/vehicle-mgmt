@@ -8,8 +8,9 @@ datasource db {
 }
 
 enum Role {
-  ADMIN
   VEHICLE_MEMBER
+  ADMIN
+  SUPER_ADMIN
   FINANCE_READONLY
 }
 

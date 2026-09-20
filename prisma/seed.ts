@@ -6,18 +6,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('开始初始化数据...');
 
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const adminPassword = await bcrypt.hash('admin123', 10);
 
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
     update: {
-      password: hashedPassword,
+      password: adminPassword,
       name: '系统管理员',
       role: 'ADMIN',
     },
     create: {
       username: 'admin',
-      password: hashedPassword,
+      password: adminPassword,
       name: '系统管理员',
       role: 'ADMIN',
     },
@@ -26,23 +26,42 @@ async function main() {
   console.log('创建管理员用户:', admin);
 
   const memberPassword = await bcrypt.hash('member123', 10);
-  
+
   const member = await prisma.user.upsert({
     where: { username: 'member' },
     update: {
       password: memberPassword,
-      name: '车辆管理员',
+      name: '普通成员',
       role: 'VEHICLE_MEMBER',
     },
     create: {
       username: 'member',
       password: memberPassword,
-      name: '车辆管理员',
+      name: '普通成员',
       role: 'VEHICLE_MEMBER',
     },
   });
 
-  console.log('创建车辆管理员用户:', member);
+  console.log('创建普通成员用户:', member);
+
+  const superAdminPassword = await bcrypt.hash('superadmin123', 10);
+
+  const superadmin = await prisma.user.upsert({
+    where: { username: 'superadmin' },
+    update: {
+      password: superAdminPassword,
+      name: '超级管理员',
+      role: 'SUPER_ADMIN',
+    },
+    create: {
+      username: 'superadmin',
+      password: superAdminPassword,
+      name: '超级管理员',
+      role: 'SUPER_ADMIN',
+    },
+  });
+
+  console.log('创建超级管理员用户:', superadmin);
 
   const vehicle = await prisma.vehicle.upsert({
     where: { plateNo: '京A12345' },
@@ -76,8 +95,9 @@ async function main() {
 
   console.log('车辆成员关联创建完成');
   console.log('\n初始账号信息:');
+  console.log('超级管理员 - 用户名: superadmin, 密码: superadmin123');
   console.log('管理员 - 用户名: admin, 密码: admin123');
-  console.log('车辆管理员 - 用户名: member, 密码: member123');
+  console.log('普通成员 - 用户名: member, 密码: member123');
 }
 
 main()
