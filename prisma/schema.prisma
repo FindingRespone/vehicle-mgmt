@@ -71,6 +71,7 @@ model Vehicle {
   owner                   User                 @relation("VehicleOwner", fields: [ownerUserId], references: [id])
   annualInspectionDueAt   DateTime?
   drivingLicenseMeta      Json?
+  driver                  String?
   remark                  String?              @db.Text
   lastLat                 Float?
   lastLng                 Float?

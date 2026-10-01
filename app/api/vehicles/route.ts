@@ -22,6 +22,7 @@ export async function POST(request: Request) {
         vehicleClass: data.vehicleClass || null,
         status: data.status || 'IN_USE',
         availability: data.availability || 'AVAILABLE',
+        driver: data.driver || null,
         ownerUserId: data.ownerUserId || session.user!.id,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)

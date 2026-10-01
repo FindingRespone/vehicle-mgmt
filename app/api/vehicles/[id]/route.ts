@@ -79,6 +79,7 @@ export async function PUT(
         vehicleClass: data.vehicleClass || null,
         status: data.status,
         availability: data.availability,
+        driver: data.driver || null,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,

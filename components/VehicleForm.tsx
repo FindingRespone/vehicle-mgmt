@@ -22,6 +22,7 @@ export default function VehicleForm({
     vehicleClass: vehicle?.vehicleClass || '',
     status: vehicle?.status || 'IN_USE',
     availability: vehicle?.availability || 'AVAILABLE',
+    driver: vehicle?.driver || '',
     annualInspectionDueAt: vehicle?.annualInspectionDueAt
       ? new Date(vehicle.annualInspectionDueAt).toISOString().split('T')[0]
       : '',
@@ -156,6 +157,22 @@ export default function VehicleForm({
               placeholder="例: 东风天龙 DFL3310A"
               className="input-field"
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label htmlFor="driver" className="block text-sm font-medium text-gray-700 mb-2">
+              司机 <span className="text-gray-400 text-xs">选填</span>
+            </label>
+            <input
+              type="text"
+              name="driver"
+              id="driver"
+              value={formData.driver}
+              onChange={handleChange}
+              placeholder="输入司机姓名"
+              className="input-field"
+            />
+            <p className="mt-1.5 text-xs text-gray-500">可以记录当前驾驶该车辆的司机</p>
           </div>
 
           <div>

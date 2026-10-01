@@ -71,6 +71,7 @@ async function main() {
       brandModel: '解放J6P',
       status: 'IN_USE',
       availability: 'AVAILABLE',
+      driver: '张师傅',
       ownerUserId: admin.id,
       annualInspectionDueAt: new Date('2025-12-31'),
       remark: '示例车辆',
