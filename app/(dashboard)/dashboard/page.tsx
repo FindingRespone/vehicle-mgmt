@@ -29,9 +29,10 @@ export default async function DashboardPage() {
   let inUseVehicles = 0;
   let expiringPoliciesCount = 0;
   let expiredPoliciesCount = 0;
-  let upcomingExpirations: any[] = [];
   let expiredPolicies: any[] = [];
   let soonExpiringPolicies: any[] = [];
+  let expiredInspections: any[] = [];
+  let soonDueInspections: any[] = [];
 
   if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') {
     // Admin sees all vehicles
@@ -113,15 +114,33 @@ export default async function DashboardPage() {
       take: 10,
     });
 
-    // Get vehicles with annual inspection due in next 60 days
-    const sixtyDaysFromNow = new Date();
-    sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
-    
-    upcomingExpirations = await prisma.vehicle.findMany({
+    // Get vehicles with expired annual inspection
+    const expiredInspections = await prisma.vehicle.findMany({
       where: {
         annualInspectionDueAt: {
-          lte: sixtyDaysFromNow,
-          gte: new Date(),
+          lt: now,
+          not: null,
+        },
+      },
+      include: {
+        owner: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        annualInspectionDueAt: 'desc',
+      },
+      take: 10,
+    });
+
+    // Get vehicles with annual inspection due within 30 days
+    const soonDueInspections = await prisma.vehicle.findMany({
+      where: {
+        annualInspectionDueAt: {
+          lte: thirtyDaysFromNow,
+          gte: now,
         },
       },
       include: {
@@ -134,7 +153,7 @@ export default async function DashboardPage() {
       orderBy: {
         annualInspectionDueAt: 'asc',
       },
-      take: 5,
+      take: 10,
     });
   } else {
     // Regular users see only their vehicles
@@ -244,15 +263,35 @@ export default async function DashboardPage() {
       take: 10,
     });
 
-    const sixtyDaysFromNow = new Date();
-    sixtyDaysFromNow.setDate(sixtyDaysFromNow.getDate() + 60);
-    
-    upcomingExpirations = await prisma.vehicle.findMany({
+    // Get vehicles with expired annual inspection
+    expiredInspections = await prisma.vehicle.findMany({
       where: {
         ...userFilter,
         annualInspectionDueAt: {
-          lte: sixtyDaysFromNow,
-          gte: new Date(),
+          lt: now,
+          not: null,
+        },
+      },
+      include: {
+        owner: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        annualInspectionDueAt: 'desc',
+      },
+      take: 10,
+    });
+
+    // Get vehicles with annual inspection due within 30 days
+    soonDueInspections = await prisma.vehicle.findMany({
+      where: {
+        ...userFilter,
+        annualInspectionDueAt: {
+          lte: thirtyDaysFromNow,
+          gte: now,
         },
       },
       include: {
@@ -265,7 +304,7 @@ export default async function DashboardPage() {
       orderBy: {
         annualInspectionDueAt: 'asc',
       },
-      take: 5,
+      take: 10,
     });
   }
 
@@ -514,79 +553,135 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Upcoming Expirations */}
+      {/* Annual Inspections */}
       <div className="card">
         <div className="px-6 py-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium leading-6 text-gray-900">即将到期的年检</h3>
-          <p className="mt-1 text-sm text-gray-500">未来60天内需要年检的车辆</p>
+          <h3 className="text-lg font-medium leading-6 text-gray-900">年检事项</h3>
+          <p className="mt-1 text-sm text-gray-500">已过期和即将到期的年检</p>
         </div>
         <div className="px-6 py-4">
-          {upcomingExpirations.length === 0 ? (
+          {expiredInspections.length === 0 && soonDueInspections.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p className="mt-2">暂无即将到期的年检</p>
+              <p className="mt-2">所有年检状态正常</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {upcomingExpirations.map((vehicle) => {
-                const daysUntilDue = Math.floor(
-                  (new Date(vehicle.annualInspectionDueAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
-                );
-                const isUrgent = daysUntilDue <= 15;
+            <div className="space-y-6">
+              {/* Expired Inspections */}
+              {expiredInspections.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-red-600 mb-3 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    已过期年检 ({expiredInspections.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {expiredInspections.map((vehicle) => {
+                      const daysOverdue = Math.floor(
+                        (new Date().getTime() - new Date(vehicle.annualInspectionDueAt).getTime()) / (1000 * 60 * 60 * 24)
+                      );
 
-                return (
-                  <Link
-                    key={vehicle.id}
-                    href={`/vehicles/${vehicle.id}`}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isUrgent ? 'bg-red-100' : 'bg-yellow-100'
-                      }`}>
-                        <svg className={`w-6 h-6 ${isUrgent ? 'text-red-600' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{vehicle.plateNo}</p>
-                        <p className="text-xs text-gray-500">{vehicle.brandModel} · {vehicle.owner.name}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-gray-900">
-                          {new Date(vehicle.annualInspectionDueAt).toLocaleDateString('zh-CN')}
-                        </p>
-                        <p className={`text-xs ${isUrgent ? 'text-red-600' : 'text-yellow-600'} font-medium`}>
-                          {daysUntilDue}天后到期
-                        </p>
-                      </div>
-                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </Link>
-                );
-              })}
+                      return (
+                        <Link
+                          key={vehicle.id}
+                          href={`/vehicles/${vehicle.id}`}
+                          className="flex items-center justify-between p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-red-100">
+                              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{vehicle.plateNo}</p>
+                              <p className="text-xs text-gray-600">{vehicle.brandModel}</p>
+                              <p className="text-xs text-gray-500">负责人: {vehicle.owner.name}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                              <p className="text-sm font-medium text-gray-900">
+                                {new Date(vehicle.annualInspectionDueAt).toLocaleDateString('zh-CN')}
+                              </p>
+                              <p className="text-xs text-red-600 font-medium">
+                                已逾期 {daysOverdue} 天
+                              </p>
+                            </div>
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Soon Due Inspections */}
+              {soonDueInspections.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-yellow-600 mb-3 flex items-center">
+                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    即将到期 ({soonDueInspections.length})
+                  </h4>
+                  <div className="space-y-3">
+                    {soonDueInspections.map((vehicle) => {
+                      const daysLeft = Math.floor(
+                        (new Date(vehicle.annualInspectionDueAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+                      );
+                      const isUrgent = daysLeft <= 7;
+
+                      return (
+                        <Link
+                          key={vehicle.id}
+                          href={`/vehicles/${vehicle.id}`}
+                          className={`flex items-center justify-between p-4 rounded-lg hover:bg-yellow-100 transition-colors border ${
+                            isUrgent ? 'bg-orange-50 border-orange-200' : 'bg-yellow-50 border-yellow-200'
+                          }`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                              isUrgent ? 'bg-orange-100' : 'bg-yellow-100'
+                            }`}>
+                              <svg className={`w-6 h-6 ${isUrgent ? 'text-orange-600' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{vehicle.plateNo}</p>
+                              <p className="text-xs text-gray-600">{vehicle.brandModel}</p>
+                              <p className="text-xs text-gray-500">负责人: {vehicle.owner.name}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <div className="text-right">
+                              <p className="text-sm font-medium text-gray-900">
+                                {new Date(vehicle.annualInspectionDueAt).toLocaleDateString('zh-CN')}
+                              </p>
+                              <p className={`text-xs font-medium ${isUrgent ? 'text-orange-600' : 'text-yellow-600'}`}>
+                                {daysLeft} 天后到期
+                              </p>
+                            </div>
+                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
-        {upcomingExpirations.length > 0 && (
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-            <Link
-              href="/vehicles"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700 flex items-center"
-            >
-              查看所有车辆
-              <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );
