@@ -115,7 +115,7 @@ export default async function DashboardPage() {
     });
 
     // Get vehicles with expired annual inspection
-    const expiredInspections = await prisma.vehicle.findMany({
+    expiredInspections = await prisma.vehicle.findMany({
       where: {
         annualInspectionDueAt: {
           lt: now,
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
     });
 
     // Get vehicles with annual inspection due within 30 days
-    const soonDueInspections = await prisma.vehicle.findMany({
+    soonDueInspections = await prisma.vehicle.findMany({
       where: {
         annualInspectionDueAt: {
           lte: thirtyDaysFromNow,
