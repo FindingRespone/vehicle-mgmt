@@ -41,6 +41,11 @@ export async function GET(
             createdAt: 'desc',
           },
         },
+        installments: {
+          orderBy: {
+            periodNumber: 'asc',
+          },
+        },
       },
       orderBy: {
         startDate: 'desc',
@@ -82,8 +87,18 @@ export async function POST(
     const data = await request.json();
 
     // Validate required fields
-    if (!data.lender || !data.loanAmount || !data.interestRate || !data.startDate || !data.endDate || !data.monthlyPayment) {
+    if (!data.lender || !data.loanAmount || !data.interestRate || !data.startDate || !data.endDate || !data.monthlyPayment || !data.installmentCount) {
       return NextResponse.json({ error: '请填写所有必填字段' }, { status: 400 });
+    }
+
+    // Validate installmentCount
+    if (data.installmentCount < 1 || !Number.isInteger(data.installmentCount)) {
+      return NextResponse.json({ error: '分期次数必须是正整数' }, { status: 400 });
+    }
+
+    // Validate installments array
+    if (!data.installments || !Array.isArray(data.installments) || data.installments.length !== data.installmentCount) {
+      return NextResponse.json({ error: '还款日期数量必须与分期次数一致' }, { status: 400 });
     }
 
     // Validate attachmentId if provided
@@ -106,10 +121,22 @@ export async function POST(
         startDate: new Date(data.startDate),
         endDate: new Date(data.endDate),
         monthlyPayment: data.monthlyPayment,
+        installmentCount: data.installmentCount,
         remark: data.remark || null,
+        installments: {
+          create: data.installments.map((inst: any, index: number) => ({
+            periodNumber: index + 1,
+            dueDate: new Date(inst.dueDate),
+          })),
+        },
       },
       include: {
         attachments: true,
+        installments: {
+          orderBy: {
+            periodNumber: 'asc',
+          },
+        },
       },
     });
 
@@ -134,8 +161,8 @@ export async function POST(
       },
     });
 
-    // Fetch the loan with attachment
-    const loanWithAttachment = await prisma.loan.findUnique({
+    // Fetch the loan with attachment and installments
+    const loanWithDetails = await prisma.loan.findUnique({
       where: { id: loan.id },
       include: {
         attachments: {
@@ -143,10 +170,15 @@ export async function POST(
             deletedAt: null,
           },
         },
+        installments: {
+          orderBy: {
+            periodNumber: 'asc',
+          },
+        },
       },
     });
 
-    return NextResponse.json(loanWithAttachment);
+    return NextResponse.json(loanWithDetails);
   } catch (error) {
     console.error('Create loan error:', error);
     return NextResponse.json({ error: '创建失败' }, { status: 500 });

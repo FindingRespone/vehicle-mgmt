@@ -14,6 +14,13 @@ interface Attachment {
   createdAt: string;
 }
 
+interface LoanInstallment {
+  id: string;
+  periodNumber: number;
+  dueDate: string;
+  paidAt: string | null;
+}
+
 interface Loan {
   id: string;
   lender: string;
@@ -22,10 +29,12 @@ interface Loan {
   startDate: string;
   endDate: string;
   monthlyPayment: string;
+  installmentCount: number;
   remark: string | null;
   createdAt: string;
   updatedAt: string;
   attachments: Attachment[];
+  installments: LoanInstallment[];
 }
 
 export default function LoanSection({
@@ -49,8 +58,10 @@ export default function LoanSection({
     startDate: '',
     endDate: '',
     monthlyPayment: '',
+    installmentCount: '',
     remark: '',
   });
+  const [installments, setInstallments] = useState<{ dueDate: string; paidAt?: string }[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadedAttachmentId, setUploadedAttachmentId] = useState<string | null>(null);
@@ -85,12 +96,59 @@ export default function LoanSection({
       startDate: '',
       endDate: '',
       monthlyPayment: '',
+      installmentCount: '',
       remark: '',
     });
+    setInstallments([]);
     setSelectedFile(null);
     setUploadedAttachmentId(null);
     setShowCreateForm(false);
     setEditingLoanId(null);
+  };
+
+  const generateInstallments = (startDate: string, count: number) => {
+    if (!startDate || count < 1) return [];
+    
+    const start = new Date(startDate);
+    const newInstallments: { dueDate: string }[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      const dueDate = new Date(start);
+      dueDate.setMonth(start.getMonth() + i + 1);
+      newInstallments.push({
+        dueDate: dueDate.toISOString().split('T')[0],
+      });
+    }
+    
+    return newInstallments;
+  };
+
+  const handleInstallmentCountChange = (count: string) => {
+    const numCount = parseInt(count);
+    setFormData({ ...formData, installmentCount: count });
+    
+    if (numCount > 0 && formData.startDate) {
+      const newInstallments = generateInstallments(formData.startDate, numCount);
+      setInstallments(newInstallments);
+    } else {
+      setInstallments([]);
+    }
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setFormData({ ...formData, startDate: date });
+    
+    const count = parseInt(formData.installmentCount);
+    if (count > 0 && date) {
+      const newInstallments = generateInstallments(date, count);
+      setInstallments(newInstallments);
+    }
+  };
+
+  const updateInstallmentDate = (index: number, date: string) => {
+    const newInstallments = [...installments];
+    newInstallments[index] = { ...newInstallments[index], dueDate: date };
+    setInstallments(newInstallments);
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,8 +187,14 @@ export default function LoanSection({
 
   const handleCreate = async () => {
     if (!formData.lender || !formData.loanAmount || !formData.interestRate || 
-        !formData.startDate || !formData.endDate || !formData.monthlyPayment) {
+        !formData.startDate || !formData.endDate || !formData.monthlyPayment || !formData.installmentCount) {
       setError('请填写所有必填字段');
+      return;
+    }
+
+    const count = parseInt(formData.installmentCount);
+    if (count < 1 || installments.length !== count) {
+      setError('请正确设置分期次数和还款日期');
       return;
     }
 
@@ -145,6 +209,8 @@ export default function LoanSection({
         },
         body: JSON.stringify({
           ...formData,
+          installmentCount: count,
+          installments: installments,
           attachmentId: uploadedAttachmentId,
         }),
       });
@@ -165,8 +231,14 @@ export default function LoanSection({
 
   const handleUpdate = async (loanId: string) => {
     if (!formData.lender || !formData.loanAmount || !formData.interestRate || 
-        !formData.startDate || !formData.endDate || !formData.monthlyPayment) {
+        !formData.startDate || !formData.endDate || !formData.monthlyPayment || !formData.installmentCount) {
       setError('请填写所有必填字段');
+      return;
+    }
+
+    const count = parseInt(formData.installmentCount);
+    if (count < 1 || installments.length !== count) {
+      setError('请正确设置分期次数和还款日期');
       return;
     }
 
@@ -181,6 +253,8 @@ export default function LoanSection({
         },
         body: JSON.stringify({
           ...formData,
+          installmentCount: count,
+          installments: installments,
           ...(uploadedAttachmentId && { newAttachmentId: uploadedAttachmentId }),
         }),
       });
@@ -230,6 +304,15 @@ export default function LoanSection({
     return diffDays;
   };
 
+  const isInstallmentOverdue = (dueDate: string, paidAt: string | null) => {
+    if (paidAt) return false;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    return due < now;
+  };
+
   const getStatusBadge = (endDate: string) => {
     const days = getDaysToEnd(endDate);
     
@@ -251,8 +334,13 @@ export default function LoanSection({
       startDate: loan.startDate.split('T')[0],
       endDate: loan.endDate.split('T')[0],
       monthlyPayment: loan.monthlyPayment,
+      installmentCount: loan.installmentCount.toString(),
       remark: loan.remark || '',
     });
+    setInstallments(loan.installments.map(inst => ({
+      dueDate: inst.dueDate.split('T')[0],
+      paidAt: inst.paidAt ? inst.paidAt.split('T')[0] : undefined,
+    })));
   };
 
   if (loading) {
@@ -355,7 +443,7 @@ export default function LoanSection({
               <input
                 type="date"
                 value={formData.startDate}
-                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                onChange={(e) => handleStartDateChange(e.target.value)}
                 className="input-field text-sm"
               />
             </div>
@@ -368,6 +456,35 @@ export default function LoanSection({
                 className="input-field text-sm"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">分期次数 *</label>
+              <input
+                type="number"
+                min="1"
+                value={formData.installmentCount}
+                onChange={(e) => handleInstallmentCountChange(e.target.value)}
+                className="input-field text-sm"
+                placeholder="如：24"
+              />
+            </div>
+            {installments.length > 0 && (
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">每期还款时间 *</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded border border-gray-200">
+                  {installments.map((inst, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <label className="text-xs text-gray-600 whitespace-nowrap">第{index + 1}期</label>
+                      <input
+                        type="date"
+                        value={inst.dueDate}
+                        onChange={(e) => updateInstallmentDate(index, e.target.value)}
+                        className="input-field text-xs flex-1"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="md:col-span-2">
               <label className="block text-xs font-medium text-gray-700 mb-1.5">贷款合同照片 {uploading && <span className="text-blue-600">(上传中...)</span>}</label>
               <input
@@ -458,6 +575,35 @@ export default function LoanSection({
                         {loan.remark && (
                           <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">{loan.remark}</p>
                         )}
+                        
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-xs font-semibold text-gray-700">还款计划（共 {loan.installmentCount} 期）</h4>
+                          </div>
+                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                            {loan.installments.map((inst) => (
+                              <div 
+                                key={inst.id} 
+                                className={`text-xs p-2 rounded border ${
+                                  inst.paidAt 
+                                    ? 'bg-green-50 border-green-200 text-green-700' 
+                                    : isInstallmentOverdue(inst.dueDate, inst.paidAt)
+                                    ? 'bg-red-50 border-red-300 text-red-700 font-medium'
+                                    : 'bg-gray-50 border-gray-200 text-gray-700'
+                                }`}
+                              >
+                                <div className="font-medium mb-0.5">第 {inst.periodNumber} 期</div>
+                                <div className="text-xs">
+                                  {new Date(inst.dueDate).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
+                                  {inst.paidAt && <span className="ml-1">✓</span>}
+                                  {!inst.paidAt && isInstallmentOverdue(inst.dueDate, inst.paidAt) && (
+                                    <span className="ml-1">逾期</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                       <div className="flex space-x-2 ml-4">
                         <button
@@ -565,7 +711,7 @@ export default function LoanSection({
                         <input
                           type="date"
                           value={formData.startDate}
-                          onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                          onChange={(e) => handleStartDateChange(e.target.value)}
                           className="input-field text-sm"
                         />
                       </div>
@@ -578,6 +724,35 @@ export default function LoanSection({
                           className="input-field text-sm"
                         />
                       </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">分期次数 *</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={formData.installmentCount}
+                          onChange={(e) => handleInstallmentCountChange(e.target.value)}
+                          className="input-field text-sm"
+                          placeholder="如：24"
+                        />
+                      </div>
+                      {installments.length > 0 && (
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-medium text-gray-700 mb-1">每期还款时间 *</label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded border border-gray-200">
+                            {installments.map((inst, index) => (
+                              <div key={index} className="flex items-center space-x-2">
+                                <label className="text-xs text-gray-600 whitespace-nowrap">第{index + 1}期</label>
+                                <input
+                                  type="date"
+                                  value={inst.dueDate}
+                                  onChange={(e) => updateInstallmentDate(index, e.target.value)}
+                                  className="input-field text-xs flex-1"
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <div className="md:col-span-2">
                         <label className="block text-xs font-medium text-gray-700 mb-1">更新贷款合同照片 {uploading && <span className="text-blue-600">(上传中...)</span>}</label>
                         <input

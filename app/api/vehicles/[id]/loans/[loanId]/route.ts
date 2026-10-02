@@ -52,6 +52,26 @@ export async function PATCH(
     if (data.endDate !== undefined) updateData.endDate = new Date(data.endDate);
     if (data.monthlyPayment !== undefined) updateData.monthlyPayment = data.monthlyPayment;
     if (data.remark !== undefined) updateData.remark = data.remark || null;
+    
+    // Handle installmentCount update
+    if (data.installmentCount !== undefined) {
+      if (data.installmentCount < 1 || !Number.isInteger(data.installmentCount)) {
+        return NextResponse.json({ error: '分期次数必须是正整数' }, { status: 400 });
+      }
+      updateData.installmentCount = data.installmentCount;
+    }
+
+    // Handle installments update
+    if (data.installments !== undefined) {
+      if (!Array.isArray(data.installments)) {
+        return NextResponse.json({ error: '还款日期格式错误' }, { status: 400 });
+      }
+      
+      const installmentCount = data.installmentCount !== undefined ? data.installmentCount : loan.installmentCount;
+      if (data.installments.length !== installmentCount) {
+        return NextResponse.json({ error: '还款日期数量必须与分期次数一致' }, { status: 400 });
+      }
+    }
 
     // If new attachment is provided, link it
     if (data.newAttachmentId) {
@@ -71,6 +91,23 @@ export async function PATCH(
       });
     }
 
+    // Update installments if provided
+    if (data.installments !== undefined) {
+      // Delete existing installments and create new ones
+      await prisma.loanInstallment.deleteMany({
+        where: { loanId: loanId },
+      });
+      
+      await prisma.loanInstallment.createMany({
+        data: data.installments.map((inst: any, index: number) => ({
+          loanId: loanId,
+          periodNumber: index + 1,
+          dueDate: new Date(inst.dueDate),
+          paidAt: inst.paidAt ? new Date(inst.paidAt) : null,
+        })),
+      });
+    }
+
     const updatedLoan = await prisma.loan.update({
       where: { id: loanId },
       data: updateData,
@@ -81,6 +118,11 @@ export async function PATCH(
           },
           orderBy: {
             createdAt: 'desc',
+          },
+        },
+        installments: {
+          orderBy: {
+            periodNumber: 'asc',
           },
         },
       },
