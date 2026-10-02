@@ -5,6 +5,7 @@ import Link from 'next/link';
 import AttachmentSection from '@/components/AttachmentSection';
 import VehicleMemberManagement from '@/components/VehicleMemberManagement';
 import InsurancePolicySection from '@/components/InsurancePolicySection';
+import LoanSection from '@/components/LoanSection';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -79,6 +80,7 @@ export default async function VehicleDetailPage({
 
   const isManager =
     session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+  const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
 
   if (!isManager) {
     const isMember = vehicle.members.some((m) => m.userId === session.user.id);
@@ -231,6 +233,8 @@ export default async function VehicleDetailPage({
           </div>
 
           <InsurancePolicySection vehicleId={vehicle.id} canManage={isManager} />
+
+          {isSuperAdmin && <LoanSection vehicleId={vehicle.id} />}
 
           <AttachmentSection vehicleId={vehicle.id} canUpload={isManager} userRole={session.user.role} />
 
