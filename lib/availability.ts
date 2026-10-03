@@ -27,9 +27,72 @@ function getTodayInShanghai(): Date {
   return shanghaiMidnight;
 }
 
+/**
+ * Convert a date to Shanghai timezone midnight
+ */
+function toShanghaiMidnight(date: Date): Date {
+  const [month, day, year] = date.toLocaleString('en-US', { 
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour12: false
+  }).split(', ')[0].split('/');
+  
+  return new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00+08:00`);
+}
+
 export interface AvailabilityResult {
   availability: Availability;
   reasons: string[];
+}
+
+/**
+ * Calculate vehicle availability from already-loaded data
+ * Useful for list views where we've already included policies and installments
+ */
+export function calculateVehicleAvailabilityFromData(
+  vehicle: {
+    id: string;
+    availability: Availability;
+    annualInspectionDueAt: Date | null;
+  },
+  policies: Array<{ endDate: Date }>,
+  overdueInstallmentCount: number
+): AvailabilityResult {
+  const today = getTodayInShanghai();
+  const reasons: string[] = [];
+  
+  // Check 1: Insurance (脱保)
+  const hasInsurance = policies.some(p => new Date(p.endDate) >= today);
+  if (!hasInsurance) {
+    reasons.push('脱保');
+  }
+  
+  // Check 2: Annual inspection (年检过期)
+  if (vehicle.annualInspectionDueAt) {
+    const inspectionDueShanghai = toShanghaiMidnight(new Date(vehicle.annualInspectionDueAt));
+    if (inspectionDueShanghai < today) {
+      reasons.push('年检过期');
+    }
+  }
+  
+  // Check 3: Loan overdue (贷款严重逾期)
+  if (overdueInstallmentCount > 0) {
+    reasons.push('贷款严重逾期');
+  }
+  
+  // Determine availability
+  const hasRiskFactors = reasons.length > 0;
+  const calculatedAvailability: Availability = hasRiskFactors ? 'UNAVAILABLE' : 'AVAILABLE';
+  
+  // If vehicle is manually set to RISK, use that; otherwise use calculated result
+  const displayAvailability = vehicle.availability === 'RISK' ? 'RISK' : calculatedAvailability;
+  
+  return {
+    availability: displayAvailability,
+    reasons,
+  };
 }
 
 /**
@@ -79,18 +142,7 @@ export async function calculateVehicleAvailability(
   });
   
   if (vehicle?.annualInspectionDueAt) {
-    const inspectionDue = new Date(vehicle.annualInspectionDueAt);
-    
-    // Convert inspection due date to Shanghai timezone midnight
-    const [month, day, year] = inspectionDue.toLocaleString('en-US', { 
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour12: false
-    }).split(', ')[0].split('/');
-    
-    const inspectionDueShanghai = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00+08:00`);
+    const inspectionDueShanghai = toShanghaiMidnight(new Date(vehicle.annualInspectionDueAt));
     
     if (inspectionDueShanghai < today) {
       reasons.push('年检过期');
@@ -160,6 +212,7 @@ export async function updateVehicleAvailability(vehicleId: string): Promise<void
 
 /**
  * Get availability status with reasons for display
+ * Returns current calculated availability and reasons (not database value)
  * Respects permissions: only SUPER_ADMIN can see loan-related reasons
  */
 export async function getVehicleAvailabilityWithReasons(
@@ -182,9 +235,12 @@ export async function getVehicleAvailabilityWithReasons(
     result.reasons = result.reasons.filter(r => r !== '贷款严重逾期');
   }
   
-  // Return the database status with calculated reasons
+  // If vehicle is manually set to RISK, use that; otherwise use calculated result
+  const displayAvailability = vehicle.availability === 'RISK' ? 'RISK' : result.availability;
+  
+  // Return the current calculated status with calculated reasons
   return {
-    availability: vehicle.availability,
+    availability: displayAvailability,
     reasons: result.reasons,
   };
 }

@@ -305,14 +305,14 @@ export default async function VehicleDetailPage({
                 <dd>
                   <span
                     className={`badge ${
-                      vehicle.availability === 'AVAILABLE'
+                      availabilityInfo.availability === 'AVAILABLE'
                         ? 'bg-blue-100 text-blue-700'
-                        : vehicle.availability === 'RISK'
+                        : availabilityInfo.availability === 'RISK'
                         ? 'bg-red-100 text-red-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {availabilityLabels[vehicle.availability]}
+                    {availabilityLabels[availabilityInfo.availability]}
                   </span>
                   {availabilityInfo.reasons.length > 0 && (
                     <div className="mt-2 text-xs text-gray-600 space-y-1">

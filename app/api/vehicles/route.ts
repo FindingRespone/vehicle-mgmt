@@ -46,7 +46,12 @@ export async function POST(request: Request) {
     // Update availability based on current conditions
     await updateVehicleAvailability(vehicle.id);
 
-    return NextResponse.json(vehicle);
+    // Fetch the updated vehicle to return the correct availability
+    const updatedVehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicle.id },
+    });
+
+    return NextResponse.json(updatedVehicle);
   } catch (error: any) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: '车牌号已存在' }, { status: 400 });

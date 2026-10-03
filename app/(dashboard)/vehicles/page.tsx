@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { calculateVehicleAvailabilityFromData } from '@/lib/availability';
 import Link from 'next/link';
 import { VehicleStatus, VehicleAvailability } from '@prisma/client';
 
@@ -130,6 +131,18 @@ export default async function VehiclesPage({
           select: {
             endDate: true,
             insuranceType: true,
+          },
+        },
+        loans: {
+          select: {
+            installments: {
+              where: {
+                paidAt: null,
+              },
+              select: {
+                dueDate: true,
+              },
+            },
           },
         },
       },
@@ -351,6 +364,22 @@ export default async function VehiclesPage({
                 {filteredVehicles.map((vehicle) => {
                   const insuranceStatus = getInsuranceStatus(vehicle.insurancePolicies);
                   const inspectionStatus = getInspectionStatus(vehicle.annualInspectionDueAt);
+                  
+                  // Calculate real-time availability
+                  const today = new Date();
+                  const todayShanghai = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
+                  todayShanghai.setHours(0, 0, 0, 0);
+                  
+                  const overdueInstallmentCount = vehicle.loans.reduce((count, loan) => {
+                    return count + loan.installments.filter(inst => new Date(inst.dueDate) < todayShanghai).length;
+                  }, 0);
+                  
+                  const availabilityInfo = calculateVehicleAvailabilityFromData(
+                    vehicle,
+                    vehicle.insurancePolicies,
+                    overdueInstallmentCount
+                  );
+                  
                   return (
                   <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -408,14 +437,14 @@ export default async function VehiclesPage({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`badge ${
-                          vehicle.availability === 'AVAILABLE'
+                          availabilityInfo.availability === 'AVAILABLE'
                             ? 'bg-blue-100 text-blue-700'
-                            : vehicle.availability === 'RISK'
+                            : availabilityInfo.availability === 'RISK'
                             ? 'bg-red-100 text-red-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {availabilityLabels[vehicle.availability]}
+                        {availabilityLabels[availabilityInfo.availability]}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
