@@ -22,7 +22,7 @@ export async function confirmReminder(reminderId: string) {
         vehicle: {
           select: {
             id: true,
-            ownerId: true,
+            ownerUserId: true,
           },
         },
       },
