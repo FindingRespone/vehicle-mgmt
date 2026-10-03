@@ -84,7 +84,7 @@ async function main() {
   console.log();
 
   // Test 3: List view uses calculated availability
-  console.log('【测试 3】列表页使用实时计算的可用性');
+  console.log('【测试 3】列表页使用实时计算的可用性（上海日历日）');
   
   const listVehicles = await prisma.vehicle.findMany({
     take: 2,
@@ -110,18 +110,13 @@ async function main() {
   });
   
   for (const v of listVehicles) {
-    const today = new Date();
-    const todayShanghai = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
-    todayShanghai.setHours(0, 0, 0, 0);
-    
-    const overdueInstallmentCount = v.loans.reduce((count, loan) => {
-      return count + loan.installments.filter(inst => new Date(inst.dueDate) < todayShanghai).length;
-    }, 0);
+    // Collect unpaid installments
+    const unpaidInstallments = v.loans.flatMap(loan => loan.installments);
     
     const availabilityInfo = calculateVehicleAvailabilityFromData(
       v,
       v.insurancePolicies,
-      overdueInstallmentCount
+      unpaidInstallments
     );
     
     console.log(`  车辆: ${v.plateNo}`);
@@ -129,7 +124,7 @@ async function main() {
     console.log(`    计算: ${availabilityInfo.availability}`);
     console.log(`    原因: ${availabilityInfo.reasons.join(', ') || '无'}`);
   }
-  console.log('  ✓ 列表页使用 calculateVehicleAvailabilityFromData');
+  console.log('  ✓ 列表页使用 getTodayInShanghai() 比较分期 dueDate');
   console.log();
 
   // Clean up test vehicle

@@ -58,7 +58,7 @@ export function calculateVehicleAvailabilityFromData(
     annualInspectionDueAt: Date | null;
   },
   policies: Array<{ endDate: Date }>,
-  overdueInstallmentCount: number
+  unpaidInstallments: Array<{ dueDate: Date }>
 ): AvailabilityResult {
   const today = getTodayInShanghai();
   const reasons: string[] = [];
@@ -78,7 +78,9 @@ export function calculateVehicleAvailabilityFromData(
   }
   
   // Check 3: Loan overdue (贷款严重逾期)
-  if (overdueInstallmentCount > 0) {
+  // Use the same logic as calculateVehicleAvailability: dueDate < today
+  const overdueCount = unpaidInstallments.filter(inst => new Date(inst.dueDate) < today).length;
+  if (overdueCount > 0) {
     reasons.push('贷款严重逾期');
   }
   

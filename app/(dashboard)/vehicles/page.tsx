@@ -365,19 +365,13 @@ export default async function VehiclesPage({
                   const insuranceStatus = getInsuranceStatus(vehicle.insurancePolicies);
                   const inspectionStatus = getInspectionStatus(vehicle.annualInspectionDueAt);
                   
-                  // Calculate real-time availability
-                  const today = new Date();
-                  const todayShanghai = new Date(today.toLocaleString('en-US', { timeZone: 'Asia/Shanghai' }));
-                  todayShanghai.setHours(0, 0, 0, 0);
-                  
-                  const overdueInstallmentCount = vehicle.loans.reduce((count, loan) => {
-                    return count + loan.installments.filter(inst => new Date(inst.dueDate) < todayShanghai).length;
-                  }, 0);
+                  // Collect all unpaid installments across all loans
+                  const unpaidInstallments = vehicle.loans.flatMap(loan => loan.installments);
                   
                   const availabilityInfo = calculateVehicleAvailabilityFromData(
                     vehicle,
                     vehicle.insurancePolicies,
-                    overdueInstallmentCount
+                    unpaidInstallments
                   );
                   
                   return (
