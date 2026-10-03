@@ -22,6 +22,9 @@ export default async function DashboardPage() {
     return null;
   }
 
+  // Get current date for comparisons
+  const now = new Date();
+
   // Get KPI counts based on user role
   let totalVehicles = 0;
   let availableVehicles = 0;
@@ -50,7 +53,6 @@ export default async function DashboardPage() {
 
     // Fetch monthly loan summary for SUPER_ADMIN only
     if (session.user.role === 'SUPER_ADMIN') {
-      const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
@@ -96,7 +98,6 @@ export default async function DashboardPage() {
     }
 
     // Get count of insurance policies expiring within 30 days and expired
-    const now = new Date();
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
     
