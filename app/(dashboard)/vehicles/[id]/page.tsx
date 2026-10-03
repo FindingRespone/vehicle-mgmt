@@ -1,10 +1,13 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canManageVehicles, canViewLoans, canViewAllVehicles } from '@/lib/roles';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import AttachmentSection from '@/components/AttachmentSection';
 import VehicleMemberManagement from '@/components/VehicleMemberManagement';
 import InsurancePolicySection from '@/components/InsurancePolicySection';
+import LoanSection from '@/components/LoanSection';
+import { getVehicleAvailabilityWithReasons } from '@/lib/availability';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -77,10 +80,12 @@ export default async function VehicleDetailPage({
     notFound();
   }
 
-  const isManager =
-    session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
+  const isManager = canManageVehicles(session.user.role);
+  const canViewLoan = canViewLoans(session.user.role);
+  const canViewAll = canViewAllVehicles(session.user.role);
 
-  if (!isManager) {
+  // Check access permission
+  if (!canViewAll) {
     const isMember = vehicle.members.some((m) => m.userId === session.user.id);
     if (vehicle.ownerUserId !== session.user.id && !isMember) {
       redirect('/vehicles');
@@ -90,6 +95,9 @@ export default async function VehicleDetailPage({
   const hasDrivingLicense = vehicle.attachments.some(a => a.category === 'DRIVING_LICENSE');
   const hasVehiclePhoto = vehicle.attachments.some(a => a.category === 'VEHICLE_PHOTO');
   const isMissingDocs = !hasDrivingLicense || !hasVehiclePhoto;
+
+  // Get availability reasons
+  const availabilityInfo = await getVehicleAvailabilityWithReasons(vehicle.id, session.user.role);
 
   return (
     <div className="space-y-6">
@@ -154,6 +162,21 @@ export default async function VehicleDetailPage({
                 <dd className="text-sm font-medium text-gray-900">{vehicle.brandModel}</dd>
               </div>
               <div>
+                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">司机</dt>
+                <dd className="text-sm text-gray-900">
+                  {vehicle.driver ? (
+                    <span className="flex items-center">
+                      <svg className="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      {vehicle.driver}
+                    </span>
+                  ) : (
+                    <span className="text-gray-400">未填写</span>
+                  )}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">负责人</dt>
                 <dd className="text-sm text-gray-900 flex items-center">
                   <svg className="w-4 h-4 mr-1.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,6 +239,8 @@ export default async function VehicleDetailPage({
           </div>
 
           <InsurancePolicySection vehicleId={vehicle.id} canManage={isManager} />
+
+          {canViewLoan && <LoanSection vehicleId={vehicle.id} readOnly={!canManageVehicles(session.user.role)} />}
 
           <AttachmentSection vehicleId={vehicle.id} canUpload={isManager} userRole={session.user.role} />
 
@@ -282,15 +307,27 @@ export default async function VehicleDetailPage({
                 <dd>
                   <span
                     className={`badge ${
-                      vehicle.availability === 'AVAILABLE'
+                      availabilityInfo.availability === 'AVAILABLE'
                         ? 'bg-blue-100 text-blue-700'
-                        : vehicle.availability === 'RISK'
+                        : availabilityInfo.availability === 'RISK'
                         ? 'bg-red-100 text-red-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {availabilityLabels[vehicle.availability]}
+                    {availabilityLabels[availabilityInfo.availability]}
                   </span>
+                  {availabilityInfo.reasons.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600 space-y-1">
+                      {availabilityInfo.reasons.map((reason, index) => (
+                        <div key={index} className="flex items-start">
+                          <svg className="w-3 h-3 mr-1 mt-0.5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </dd>
               </div>
               {isMissingDocs && (

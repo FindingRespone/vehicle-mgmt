@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { invalidateOldReminders } from '@/lib/reminders';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -28,8 +30,8 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    // Check access: admin/super_admin or owner or member
-    if (!isAdminOrAbove(session.user.role)) {
+    // Check access: admin/super_admin/finance or owner or member
+    if (!canViewAllVehicles(session.user.role)) {
       const isMember = vehicle.members.some((m) => m.userId === session.user.id);
       if (vehicle.ownerUserId !== session.user.id && !isMember) {
         return NextResponse.json({ error: '无权限' }, { status: 403 });
@@ -155,6 +157,15 @@ export async function PATCH(
       },
     });
 
+    // Invalidate old reminders if endDate changed
+    if (data.endDate && new Date(data.endDate).getTime() !== new Date(policy.endDate).getTime()) {
+      await invalidateOldReminders({
+        vehicleId: id,
+        sourceType: 'InsurancePolicy',
+        sourceId: policyId,
+      });
+    }
+
     await prisma.auditLog.create({
       data: {
         userId: session.user.id,
@@ -165,6 +176,9 @@ export async function PATCH(
         changes: data,
       },
     });
+
+    // Update vehicle availability based on insurance status
+    await updateVehicleAvailability(id);
 
     return NextResponse.json(updatedPolicy);
   } catch (error) {
@@ -211,6 +225,9 @@ export async function DELETE(
         entityId: policyId,
       },
     });
+
+    // Update vehicle availability after deleting insurance
+    await updateVehicleAvailability(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

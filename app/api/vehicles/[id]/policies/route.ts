@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -28,8 +29,8 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    // Check access: admin/super_admin or owner or member
-    if (!isAdminOrAbove(session.user.role)) {
+    // Check access: admin/super_admin/finance or owner or member
+    if (!canViewAllVehicles(session.user.role)) {
       const isMember = vehicle.members.some((m) => m.userId === session.user.id);
       if (vehicle.ownerUserId !== session.user.id && !isMember) {
         return NextResponse.json({ error: '无权限' }, { status: 403 });
@@ -154,6 +155,9 @@ export async function POST(
         },
       },
     });
+
+    // Update vehicle availability based on new insurance
+    await updateVehicleAvailability(id);
 
     return NextResponse.json(policyWithAttachment);
   } catch (error) {

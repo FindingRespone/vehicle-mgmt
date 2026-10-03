@@ -71,6 +71,7 @@ model Vehicle {
   owner                   User                 @relation("VehicleOwner", fields: [ownerUserId], references: [id])
   annualInspectionDueAt   DateTime?
   drivingLicenseMeta      Json?
+  driver                  String?
   remark                  String?              @db.Text
   lastLat                 Float?
   lastLng                 Float?
@@ -121,21 +122,38 @@ model InsurancePolicy {
 }
 
 model Loan {
-  id                String       @id @default(cuid())
+  id                String            @id @default(cuid())
   vehicleId         String
-  vehicle           Vehicle      @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle           Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   lender            String
-  loanAmount        Decimal      @db.Decimal(12, 2)
-  interestRate      Decimal      @db.Decimal(5, 4)
+  loanAmount        Decimal           @db.Decimal(12, 2)
+  interestRate      Decimal           @db.Decimal(7, 4)
   startDate         DateTime
   endDate           DateTime
-  monthlyPayment    Decimal      @db.Decimal(10, 2)
-  remark            String?      @db.Text
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  monthlyPayment    Decimal           @db.Decimal(10, 2)
+  installmentCount  Int
+  remark            String?           @db.Text
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
   attachments       Attachment[]
+  installments      LoanInstallment[]
 
   @@index([vehicleId])
+}
+
+model LoanInstallment {
+  id            String    @id @default(cuid())
+  loanId        String
+  loan          Loan      @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  periodNumber  Int
+  dueDate       DateTime
+  paidAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([loanId, periodNumber])
+  @@index([loanId])
+  @@index([dueDate])
 }
 
 model Attachment {
@@ -163,20 +181,39 @@ model Attachment {
   @@index([deletedAt])
 }
 
+enum ReminderStatus {
+  PENDING
+  SENT
+  CONFIRMED
+  SKIPPED
+}
+
 model Reminder {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   vehicleId     String
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  sourceType    String
+  sourceId      String?
   title         String
-  description   String?   @db.Text
+  description   String?         @db.Text
   dueDate       DateTime
-  isCompleted   Boolean   @default(false)
+  remindAt      DateTime
+  offsetDays    Int
+  channel       String          @default("inbox")
+  status        ReminderStatus  @default(PENDING)
+  payload       String?         @db.Text
+  isCompleted   Boolean         @default(false)
   completedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  confirmedBy   String?
+  confirmedAt   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([vehicleId])
   @@index([dueDate])
+  @@index([remindAt, status])
+  @@unique([vehicleId, sourceType, sourceId, offsetDays, channel])
 }
 
 model Device {
