@@ -87,51 +87,39 @@ export default async function LoansPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="card p-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-red-600">{overdueInstallments.length}</div>
-            <div className="text-sm text-gray-600 mt-2">逾期未还</div>
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="bg-white border border-gray-200 p-5">
+          <div className="text-sm text-gray-600 mb-1">逾期未还</div>
+          <div className="text-3xl font-semibold text-red-600">{overdueInstallments.length}</div>
         </div>
-        <div className="card p-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-blue-600">{pendingInstallments.length}</div>
-            <div className="text-sm text-gray-600 mt-2">本月待还</div>
-          </div>
+        <div className="bg-white border border-gray-200 p-5">
+          <div className="text-sm text-gray-600 mb-1">本月待还</div>
+          <div className="text-3xl font-semibold text-gray-700">{pendingInstallments.length}</div>
         </div>
-        <div className="card p-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-green-600">
-              ¥{monthTotal.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </div>
-            <div className="text-sm text-gray-600 mt-2">本月合计</div>
+        <div className="bg-white border border-gray-200 p-5">
+          <div className="text-sm text-gray-600 mb-1">本月合计</div>
+          <div className="text-3xl font-semibold text-gray-900">
+            ¥{monthTotal.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
           </div>
         </div>
       </div>
 
       {/* Loan Repayments */}
-      <div className="card">
-        <div className="px-6 py-4">
+      <div className="bg-white border border-gray-200">
+        <div className="px-5 py-4">
           {installments.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <p className="mt-2">本月无需还款</p>
+              <p className="text-sm">本月无需还款</p>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Overdue Loans */}
               {overdueInstallments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-red-600 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
                     逾期未还 ({overdueInstallments.length})
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {overdueInstallments.map((installment: any) => {
                       const dueDate = new Date(installment.dueDate);
                       const daysOverdue = Math.floor(
@@ -143,36 +131,25 @@ export default async function LoansPage() {
                         <Link
                           key={installment.id}
                           href={`/vehicles/${installment.loan.vehicle.id}`}
-                          className="flex items-center justify-between p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                          className="flex items-center justify-between p-3 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors"
                         >
-                          <div className="flex items-center space-x-4 flex-1 min-w-0">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-red-100">
-                              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                              </svg>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-3">
+                              <span className="text-sm font-medium text-gray-900">{installment.loan.vehicle.plateNo}</span>
+                              <span className="text-xs text-gray-600">第 {installment.periodNumber} 期</span>
+                              <span className="text-xs text-gray-500">{installment.loan.lender}</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">{installment.loan.vehicle.plateNo}</p>
-                              <p className="text-xs text-gray-600 mt-0.5">
-                                第 {installment.periodNumber} 期 · {installment.loan.lender}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                应还金额: ¥{Number(installment.loan.monthlyPayment).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </p>
+                            <div className="text-xs text-gray-500 mt-1">
+                              应还金额: ¥{Number(installment.loan.monthlyPayment).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3 flex-shrink-0">
-                            <div className="text-right">
-                              <p className="text-sm font-medium text-gray-900">
-                                {monthlyLoanSummary.month}月{dueDay}日
-                              </p>
-                              <p className="text-xs text-red-600 font-medium">
-                                已逾期 {daysOverdue} 天
-                              </p>
+                          <div className="text-right flex-shrink-0 ml-4">
+                            <div className="text-sm text-gray-900">
+                              {monthlyLoanSummary.month}月{dueDay}日
                             </div>
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            <div className="text-xs text-red-600 font-medium mt-0.5">
+                              已逾期 {daysOverdue} 天
+                            </div>
                           </div>
                         </Link>
                       );
@@ -184,13 +161,10 @@ export default async function LoansPage() {
               {/* Pending Loans */}
               {pendingInstallments.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-blue-600 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
                     本月待还 ({pendingInstallments.length})
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {pendingInstallments.map((installment: any) => {
                       const dueDate = new Date(installment.dueDate);
                       const daysLeft = Math.floor(
@@ -203,42 +177,29 @@ export default async function LoansPage() {
                         <Link
                           key={installment.id}
                           href={`/vehicles/${installment.loan.vehicle.id}`}
-                          className={`flex items-center justify-between p-4 rounded-lg transition-colors border ${
+                          className={`flex items-center justify-between p-3 border transition-colors ${
                             isUrgent
-                              ? 'bg-orange-50 border-orange-200 hover:bg-orange-100'
-                              : 'bg-blue-50 border-blue-200 hover:bg-blue-100'
+                              ? 'border-orange-200 bg-orange-50 hover:bg-orange-100'
+                              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center space-x-4 flex-1 min-w-0">
-                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                              isUrgent ? 'bg-orange-100' : 'bg-blue-100'
-                            }`}>
-                              <svg className={`w-6 h-6 ${isUrgent ? 'text-orange-600' : 'text-blue-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-3">
+                              <span className="text-sm font-medium text-gray-900">{installment.loan.vehicle.plateNo}</span>
+                              <span className="text-xs text-gray-600">第 {installment.periodNumber} 期</span>
+                              <span className="text-xs text-gray-500">{installment.loan.lender}</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">{installment.loan.vehicle.plateNo}</p>
-                              <p className="text-xs text-gray-600 mt-0.5">
-                                第 {installment.periodNumber} 期 · {installment.loan.lender}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                应还金额: ¥{Number(installment.loan.monthlyPayment).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </p>
+                            <div className="text-xs text-gray-500 mt-1">
+                              应还金额: ¥{Number(installment.loan.monthlyPayment).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3 flex-shrink-0">
-                            <div className="text-right">
-                              <p className="text-sm font-medium text-gray-900">
-                                {monthlyLoanSummary.month}月{dueDay}日
-                              </p>
-                              <p className={`text-xs font-medium ${isUrgent ? 'text-orange-600' : 'text-blue-600'}`}>
-                                {daysLeft} 天后到期
-                              </p>
+                          <div className="text-right flex-shrink-0 ml-4">
+                            <div className="text-sm text-gray-900">
+                              {monthlyLoanSummary.month}月{dueDay}日
                             </div>
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            <div className={`text-xs font-medium mt-0.5 ${isUrgent ? 'text-orange-500' : 'text-gray-600'}`}>
+                              {daysLeft} 天后到期
+                            </div>
                           </div>
                         </Link>
                       );

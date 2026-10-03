@@ -330,110 +330,89 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Navigation Cards */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {/* Insurance Card */}
+      {/* Quick Links */}
+      <div className={`grid gap-4 ${session.user.role === 'SUPER_ADMIN' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+        {/* Insurance Link */}
         <Link
           href="/dashboard/insurance"
-          className="card p-6 hover:shadow-lg transition-all group"
+          className="block bg-white border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all"
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center bg-purple-100 group-hover:bg-purple-200 transition-colors">
-                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">保险事项</h3>
-            </div>
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h3 className="text-base font-medium text-gray-900">保险事项</h3>
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2.5">
+            <div className="flex items-baseline justify-between">
               <span className="text-sm text-gray-600">已过期</span>
-              <span className="text-lg font-bold text-red-600">{expiredPoliciesCount}</span>
+              <span className="text-xl font-semibold text-red-600">{expiredPoliciesCount}</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-baseline justify-between">
               <span className="text-sm text-gray-600">即将到期</span>
-              <span className="text-lg font-bold text-orange-600">{expiringPoliciesCount}</span>
+              <span className="text-xl font-semibold text-orange-500">{expiringPoliciesCount}</span>
             </div>
           </div>
         </Link>
 
-        {/* Inspections Card */}
+        {/* Inspections Link */}
         <Link
           href="/dashboard/inspections"
-          className="card p-6 hover:shadow-lg transition-all group"
+          className="block bg-white border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all"
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center bg-green-100 group-hover:bg-green-200 transition-colors">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">年检事项</h3>
-            </div>
-            <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h3 className="text-base font-medium text-gray-900">年检事项</h3>
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2.5">
+            <div className="flex items-baseline justify-between">
               <span className="text-sm text-gray-600">已过期</span>
-              <span className="text-lg font-bold text-red-600">{expiredInspections.length}</span>
+              <span className="text-xl font-semibold text-red-600">{expiredInspections.length}</span>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-baseline justify-between">
               <span className="text-sm text-gray-600">即将到期</span>
-              <span className="text-lg font-bold text-orange-600">{soonDueInspections.length}</span>
+              <span className="text-xl font-semibold text-orange-500">{soonDueInspections.length}</span>
             </div>
           </div>
         </Link>
 
-        {/* Loans Card - SUPER_ADMIN only */}
+        {/* Loans Link - SUPER_ADMIN only */}
         {session.user.role === 'SUPER_ADMIN' && monthlyLoanSummary && (
           <Link
             href="/dashboard/loans"
-            className="card p-6 hover:shadow-lg transition-all group"
+            className="block bg-white border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all"
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">贷款还款</h3>
-              </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <h3 className="text-base font-medium text-gray-900">贷款还款</h3>
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            <div className="space-y-2.5">
+              <div className="flex items-baseline justify-between">
                 <span className="text-sm text-gray-600">逾期未还</span>
-                <span className="text-lg font-bold text-red-600">
+                <span className="text-xl font-semibold text-red-600">
                   {monthlyLoanSummary.installments.filter((inst: any) => {
                     const dueDate = new Date(inst.dueDate);
                     return dueDate < now && !inst.paidAt;
                   }).length}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-baseline justify-between">
                 <span className="text-sm text-gray-600">本月待还</span>
-                <span className="text-lg font-bold text-blue-600">
+                <span className="text-xl font-semibold text-gray-700">
                   {monthlyLoanSummary.installments.filter((inst: any) => {
                     const dueDate = new Date(inst.dueDate);
                     return dueDate >= now && !inst.paidAt;
                   }).length}
                 </span>
               </div>
-              <div className="pt-2 border-t border-gray-200 mt-3">
-                <div className="flex items-center justify-between">
+              <div className="pt-2.5 border-t border-gray-100">
+                <div className="flex items-baseline justify-between">
                   <span className="text-sm text-gray-600">本月合计</span>
-                  <span className="text-lg font-bold text-green-600">
+                  <span className="text-xl font-semibold text-gray-900">
                     ¥{monthlyLoanSummary.monthTotal.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </span>
                 </div>

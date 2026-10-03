@@ -175,43 +175,33 @@ export default async function InsurancePage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="card p-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-red-600">{expiredPoliciesCount}</div>
-            <div className="text-sm text-gray-600 mt-2">已过期保单</div>
-          </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="bg-white border border-gray-200 p-5">
+          <div className="text-sm text-gray-600 mb-1">已过期保单</div>
+          <div className="text-3xl font-semibold text-red-600">{expiredPoliciesCount}</div>
         </div>
-        <div className="card p-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-orange-600">{expiringPoliciesCount}</div>
-            <div className="text-sm text-gray-600 mt-2">即将到期保单</div>
-          </div>
+        <div className="bg-white border border-gray-200 p-5">
+          <div className="text-sm text-gray-600 mb-1">即将到期保单</div>
+          <div className="text-3xl font-semibold text-orange-500">{expiringPoliciesCount}</div>
         </div>
       </div>
 
       {/* Insurance Policies */}
-      <div className="card">
-        <div className="px-6 py-4">
+      <div className="bg-white border border-gray-200">
+        <div className="px-5 py-4">
           {expiredPolicies.length === 0 && soonExpiringPolicies.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              <p className="mt-2">所有保单状态正常</p>
+              <p className="text-sm">所有保单状态正常</p>
             </div>
           ) : (
             <div className="space-y-6">
               {/* Expired Policies */}
               {expiredPolicies.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-red-600 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
                     已过期保单 ({expiredPolicies.length})
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {expiredPolicies.map((policy) => {
                       const daysOverdue = Math.floor(
                         (now.getTime() - new Date(policy.endDate).getTime()) / (1000 * 60 * 60 * 24)
@@ -221,32 +211,23 @@ export default async function InsurancePage() {
                         <Link
                           key={policy.id}
                           href={`/vehicles/${policy.vehicle.id}`}
-                          className="flex items-center justify-between p-4 bg-red-50 rounded-lg hover:bg-red-100 transition-colors border border-red-200"
+                          className="flex items-center justify-between p-3 border border-red-200 bg-red-50 hover:bg-red-100 transition-colors"
                         >
-                          <div className="flex items-center space-x-4 flex-1 min-w-0">
-                            <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-red-100">
-                              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                              </svg>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-3">
+                              <span className="text-sm font-medium text-gray-900">{policy.vehicle.plateNo}</span>
+                              <span className="text-xs text-gray-600">{policy.insuranceType}</span>
+                              <span className="text-xs text-gray-500">{policy.insuranceCompany}</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">{policy.vehicle.plateNo}</p>
-                              <p className="text-xs text-gray-600 mt-0.5">{policy.insuranceType} · {policy.insuranceCompany}</p>
-                              <p className="text-xs text-gray-500">保单号: {policy.policyNo}</p>
-                            </div>
+                            <div className="text-xs text-gray-500 mt-1">保单号: {policy.policyNo}</div>
                           </div>
-                          <div className="flex items-center space-x-3 flex-shrink-0">
-                            <div className="text-right">
-                              <p className="text-sm font-medium text-gray-900">
-                                {new Date(policy.endDate).toLocaleDateString('zh-CN')}
-                              </p>
-                              <p className="text-xs text-red-600 font-medium">
-                                已逾期 {daysOverdue} 天
-                              </p>
+                          <div className="text-right flex-shrink-0 ml-4">
+                            <div className="text-sm text-gray-900">
+                              {new Date(policy.endDate).toLocaleDateString('zh-CN')}
                             </div>
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            <div className="text-xs text-red-600 font-medium mt-0.5">
+                              已逾期 {daysOverdue} 天
+                            </div>
                           </div>
                         </Link>
                       );
@@ -258,13 +239,10 @@ export default async function InsurancePage() {
               {/* Expiring Policies */}
               {soonExpiringPolicies.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-orange-600 mb-3 flex items-center">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
                     即将到期 ({soonExpiringPolicies.length})
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {soonExpiringPolicies.map((policy) => {
                       const daysLeft = Math.floor(
                         (new Date(policy.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
@@ -275,38 +253,27 @@ export default async function InsurancePage() {
                         <Link
                           key={policy.id}
                           href={`/vehicles/${policy.vehicle.id}`}
-                          className={`flex items-center justify-between p-4 rounded-lg transition-colors border ${
+                          className={`flex items-center justify-between p-3 border transition-colors ${
                             isUrgent
-                              ? 'bg-orange-50 border-orange-200 hover:bg-orange-100'
-                              : 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100'
+                              ? 'border-orange-200 bg-orange-50 hover:bg-orange-100'
+                              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
                           }`}
                         >
-                          <div className="flex items-center space-x-4 flex-1 min-w-0">
-                            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
-                              isUrgent ? 'bg-orange-100' : 'bg-yellow-100'
-                            }`}>
-                              <svg className={`w-6 h-6 ${isUrgent ? 'text-orange-600' : 'text-yellow-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-3">
+                              <span className="text-sm font-medium text-gray-900">{policy.vehicle.plateNo}</span>
+                              <span className="text-xs text-gray-600">{policy.insuranceType}</span>
+                              <span className="text-xs text-gray-500">{policy.insuranceCompany}</span>
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900">{policy.vehicle.plateNo}</p>
-                              <p className="text-xs text-gray-600 mt-0.5">{policy.insuranceType} · {policy.insuranceCompany}</p>
-                              <p className="text-xs text-gray-500">保单号: {policy.policyNo}</p>
-                            </div>
+                            <div className="text-xs text-gray-500 mt-1">保单号: {policy.policyNo}</div>
                           </div>
-                          <div className="flex items-center space-x-3 flex-shrink-0">
-                            <div className="text-right">
-                              <p className="text-sm font-medium text-gray-900">
-                                {new Date(policy.endDate).toLocaleDateString('zh-CN')}
-                              </p>
-                              <p className={`text-xs font-medium ${isUrgent ? 'text-orange-600' : 'text-yellow-600'}`}>
-                                {daysLeft} 天后到期
-                              </p>
+                          <div className="text-right flex-shrink-0 ml-4">
+                            <div className="text-sm text-gray-900">
+                              {new Date(policy.endDate).toLocaleDateString('zh-CN')}
                             </div>
-                            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
+                            <div className={`text-xs font-medium mt-0.5 ${isUrgent ? 'text-orange-500' : 'text-gray-600'}`}>
+                              {daysLeft} 天后到期
+                            </div>
                           </div>
                         </Link>
                       );
