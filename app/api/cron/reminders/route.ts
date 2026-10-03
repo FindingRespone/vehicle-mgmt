@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { updateAllVehiclesAvailability } from '@/lib/availability';
 
 interface ReminderToCreate {
   vehicleId: string;
@@ -353,11 +354,15 @@ export async function POST(request: Request) {
       }
     }
 
+    // Update all vehicles availability based on current conditions
+    const availabilityResult = await updateAllVehiclesAvailability();
+
     return NextResponse.json({
       success: true,
       created,
       skipped,
       total: remindersToCreate.length,
+      availabilityUpdated: availabilityResult.updated,
     });
   } catch (error) {
     console.error('Cron job error:', error);

@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -41,6 +42,9 @@ export async function POST(request: Request) {
         changes: data,
       },
     });
+
+    // Update availability based on current conditions
+    await updateVehicleAvailability(vehicle.id);
 
     return NextResponse.json(vehicle);
   } catch (error: any) {

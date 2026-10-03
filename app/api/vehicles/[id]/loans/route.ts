@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdmin } from '@/lib/roles';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -180,6 +181,9 @@ export async function POST(
         },
       },
     });
+
+    // Update vehicle availability based on new loan (may have overdue installments)
+    await updateVehicleAvailability(id);
 
     return NextResponse.json(loanWithDetails);
   } catch (error) {
