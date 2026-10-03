@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdmin } from '@/lib/roles';
+import { invalidateOldReminders } from '@/lib/reminders';
 import { NextResponse } from 'next/server';
 
 export async function PATCH(
@@ -110,6 +111,21 @@ export async function PATCH(
 
     // Update installments if provided
     if (data.installments !== undefined) {
+      // Get old installments to invalidate their reminders
+      const oldInstallments = await prisma.loanInstallment.findMany({
+        where: { loanId: loanId },
+        select: { id: true },
+      });
+
+      // Invalidate old reminders for each installment
+      for (const inst of oldInstallments) {
+        await invalidateOldReminders({
+          vehicleId: id,
+          sourceType: 'LoanInstallment',
+          sourceId: inst.id,
+        });
+      }
+
       // Delete existing installments and create new ones
       await prisma.loanInstallment.deleteMany({
         where: { loanId: loanId },

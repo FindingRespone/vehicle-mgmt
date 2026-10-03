@@ -49,7 +49,7 @@ export default async function RemindersPage() {
     // Also include vehicles where user is owner
     const ownedVehicles = await prisma.vehicle.findMany({
       where: {
-        ownerId: userId,
+        ownerUserId: userId,
       },
       select: {
         id: true,

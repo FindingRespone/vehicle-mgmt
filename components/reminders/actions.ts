@@ -49,7 +49,7 @@ export async function confirmReminder(reminderId: string) {
         },
       });
 
-      const isOwner = reminder.vehicle.ownerId === userId;
+      const isOwner = reminder.vehicle.ownerUserId === userId;
 
       if (!isMember && !isOwner) {
         return { success: false, error: '无权限处理此提醒' };

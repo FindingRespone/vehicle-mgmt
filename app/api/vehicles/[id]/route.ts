@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { invalidateOldReminders } from '@/lib/reminders';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -71,6 +72,16 @@ export async function PUT(
 
     const data = await request.json();
 
+    // Fetch old vehicle data to check if annualInspectionDueAt changed
+    const oldVehicle = await prisma.vehicle.findUnique({
+      where: { id },
+      select: { annualInspectionDueAt: true },
+    });
+
+    if (!oldVehicle) {
+      return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
+    }
+
     const vehicle = await prisma.vehicle.update({
       where: { id },
       data: {
@@ -88,6 +99,20 @@ export async function PUT(
         ...(data.ownerUserId ? { ownerUserId: data.ownerUserId } : {}),
       },
     });
+
+    // Invalidate old reminders if annualInspectionDueAt changed
+    if (data.annualInspectionDueAt) {
+      const newDate = new Date(data.annualInspectionDueAt).getTime();
+      const oldDate = oldVehicle.annualInspectionDueAt?.getTime();
+      
+      if (newDate !== oldDate) {
+        await invalidateOldReminders({
+          vehicleId: id,
+          sourceType: 'AnnualInspection',
+          sourceId: id,
+        });
+      }
+    }
 
     await prisma.auditLog.create({
       data: {

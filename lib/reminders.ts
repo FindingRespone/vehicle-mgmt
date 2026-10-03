@@ -14,8 +14,8 @@ export async function invalidateOldReminders({
   sourceId?: string;
 }) {
   try {
-    // Mark old unconfirmed reminders as SKIPPED
-    await prisma.reminder.updateMany({
+    // Delete old unconfirmed reminders so they can be recreated with new due date
+    await prisma.reminder.deleteMany({
       where: {
         vehicleId,
         sourceType,
@@ -23,9 +23,6 @@ export async function invalidateOldReminders({
         status: {
           in: ['PENDING', 'SENT'],
         },
-      },
-      data: {
-        status: 'SKIPPED',
       },
     });
   } catch (error) {

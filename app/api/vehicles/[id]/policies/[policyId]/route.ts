@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { invalidateOldReminders } from '@/lib/reminders';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -154,6 +155,15 @@ export async function PATCH(
         },
       },
     });
+
+    // Invalidate old reminders if endDate changed
+    if (data.endDate && new Date(data.endDate).getTime() !== new Date(policy.endDate).getTime()) {
+      await invalidateOldReminders({
+        vehicleId: id,
+        sourceType: 'InsurancePolicy',
+        sourceId: policyId,
+      });
+    }
 
     await prisma.auditLog.create({
       data: {
