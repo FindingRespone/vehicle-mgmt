@@ -39,8 +39,10 @@ interface Loan {
 
 export default function LoanSection({
   vehicleId,
+  readOnly = false,
 }: {
   vehicleId: string;
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   
@@ -413,7 +415,7 @@ export default function LoanSection({
           </svg>
           贷款台账
         </h2>
-        {!showCreateForm && !editingLoanId && (
+        {!readOnly && !showCreateForm && !editingLoanId && (
           <button
             onClick={() => setShowCreateForm(true)}
             className="btn btn-primary text-sm"
@@ -665,6 +667,7 @@ export default function LoanSection({
                           </div>
                         </div>
                       </div>
+                      {!readOnly && (
                       <div className="flex space-x-2 ml-4">
                         <button
                           onClick={() => startEdit(loan)}
@@ -679,6 +682,7 @@ export default function LoanSection({
                           删除
                         </button>
                       </div>
+                      )}
                     </div>
 
                     {loan.attachments.length > 0 && (

@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import { invalidateOldReminders } from '@/lib/reminders';
 import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
@@ -44,7 +44,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (!isAdminOrAbove(session.user.role)) {
+    if (!canViewAllVehicles(session.user.role)) {
       const isMember = vehicle.members.some(
         (m) => m.userId === session.user.id
       );

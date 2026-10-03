@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canAccessLoanContract, canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canAccessLoanContract, canManageVehicles, canViewAllVehicles, canViewLoans } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -31,7 +31,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (!isAdminOrAbove(session.user.role)) {
+    if (!canViewAllVehicles(session.user.role)) {
       const isMember = vehicle.members.some((m) => m.userId === session.user.id);
       if (vehicle.ownerUserId !== session.user.id && !isMember) {
         return NextResponse.json({ error: '无权限' }, { status: 403 });
@@ -42,8 +42,8 @@ export async function GET(
       where: {
         vehicleId: id,
         deletedAt: null,
-        // Filter LOAN_CONTRACT at query level for non-super-admins
-        ...(canAccessLoanContract(session.user.role)
+        // Filter LOAN_CONTRACT at query level for users who can't view loans
+        ...(canViewLoans(session.user.role)
           ? {}
           : { category: { not: 'LOAN_CONTRACT' } }),
       },

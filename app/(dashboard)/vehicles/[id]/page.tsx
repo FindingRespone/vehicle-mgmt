@@ -240,7 +240,7 @@ export default async function VehicleDetailPage({
 
           <InsurancePolicySection vehicleId={vehicle.id} canManage={isManager} />
 
-          {canViewLoan && <LoanSection vehicleId={vehicle.id} />}
+          {canViewLoan && <LoanSection vehicleId={vehicle.id} readOnly={!canManageVehicles(session.user.role)} />}
 
           <AttachmentSection vehicleId={vehicle.id} canUpload={isManager} userRole={session.user.role} />
 
