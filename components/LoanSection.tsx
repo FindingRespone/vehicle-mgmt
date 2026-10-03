@@ -51,6 +51,7 @@ export default function LoanSection({
   
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
+  const [originalLoan, setOriginalLoan] = useState<Loan | null>(null);
   const [formData, setFormData] = useState({
     lender: '',
     loanAmount: '',
@@ -104,6 +105,7 @@ export default function LoanSection({
     setUploadedAttachmentId(null);
     setShowCreateForm(false);
     setEditingLoanId(null);
+    setOriginalLoan(null);
   };
 
   const generateInstallments = (startDate: string, count: number) => {
@@ -242,21 +244,75 @@ export default function LoanSection({
       return;
     }
 
+    if (!originalLoan) {
+      setError('无法获取原始贷款数据');
+      return;
+    }
+
     setError('');
     setSuccess('');
 
     try {
+      // Check which critical fields have changed
+      const criticalFieldsChanged = (
+        formData.lender !== originalLoan.lender ||
+        formData.loanAmount !== originalLoan.loanAmount ||
+        formData.interestRate !== originalLoan.interestRate ||
+        formData.monthlyPayment !== originalLoan.monthlyPayment ||
+        formData.startDate !== originalLoan.startDate.split('T')[0] ||
+        formData.endDate !== originalLoan.endDate.split('T')[0] ||
+        parseInt(formData.installmentCount) !== originalLoan.installmentCount ||
+        JSON.stringify(installments) !== JSON.stringify(originalLoan.installments.map(inst => ({
+          dueDate: inst.dueDate.split('T')[0],
+          paidAt: inst.paidAt ? inst.paidAt.split('T')[0] : undefined,
+        })))
+      );
+
+      // If critical fields changed, require new attachment
+      if (criticalFieldsChanged && !uploadedAttachmentId) {
+        setError('变更贷款关键条款必须上传新的合同影像');
+        return;
+      }
+
+      // Build update payload - only include changed fields
+      const updatePayload: any = {};
+
+      if (formData.lender !== originalLoan.lender) updatePayload.lender = formData.lender;
+      if (formData.loanAmount !== originalLoan.loanAmount) updatePayload.loanAmount = formData.loanAmount;
+      if (formData.interestRate !== originalLoan.interestRate) updatePayload.interestRate = formData.interestRate;
+      if (formData.monthlyPayment !== originalLoan.monthlyPayment) updatePayload.monthlyPayment = formData.monthlyPayment;
+      if (formData.startDate !== originalLoan.startDate.split('T')[0]) updatePayload.startDate = formData.startDate;
+      if (formData.endDate !== originalLoan.endDate.split('T')[0]) updatePayload.endDate = formData.endDate;
+      if (parseInt(formData.installmentCount) !== originalLoan.installmentCount) {
+        updatePayload.installmentCount = count;
+      }
+      
+      // Check if installments changed
+      const originalInstallmentsStr = JSON.stringify(originalLoan.installments.map(inst => ({
+        dueDate: inst.dueDate.split('T')[0],
+        paidAt: inst.paidAt ? inst.paidAt.split('T')[0] : undefined,
+      })));
+      const currentInstallmentsStr = JSON.stringify(installments);
+      if (originalInstallmentsStr !== currentInstallmentsStr) {
+        updatePayload.installments = installments;
+      }
+
+      // Always allow remark changes
+      if (formData.remark !== (originalLoan.remark || '')) {
+        updatePayload.remark = formData.remark;
+      }
+
+      // If new attachment uploaded, include it
+      if (uploadedAttachmentId) {
+        updatePayload.newAttachmentId = uploadedAttachmentId;
+      }
+
       const response = await fetch(`/api/vehicles/${vehicleId}/loans/${loanId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          installmentCount: count,
-          installments: installments,
-          ...(uploadedAttachmentId && { newAttachmentId: uploadedAttachmentId }),
-        }),
+        body: JSON.stringify(updatePayload),
       });
 
       if (!response.ok) {
@@ -327,6 +383,7 @@ export default function LoanSection({
 
   const startEdit = (loan: Loan) => {
     setEditingLoanId(loan.id);
+    setOriginalLoan(loan);
     setFormData({
       lender: loan.lender,
       loanAmount: loan.loanAmount,

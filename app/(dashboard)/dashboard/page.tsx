@@ -412,7 +412,9 @@ export default async function DashboardPage() {
                 <span className="text-xl font-semibold text-gray-700">
                   {monthlyLoanSummary.installments.filter((inst: any) => {
                     const dueDate = new Date(inst.dueDate);
-                    return dueDate >= now && !inst.paidAt;
+                    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+                    return dueDate >= firstDayOfMonth && dueDate <= lastDayOfMonth && dueDate >= now && !inst.paidAt;
                   }).length}
                 </span>
               </div>
