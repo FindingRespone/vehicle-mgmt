@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
 import { invalidateOldReminders } from '@/lib/reminders';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -113,6 +114,9 @@ export async function PUT(
         });
       }
     }
+
+    // Update vehicle availability based on inspection status
+    await updateVehicleAvailability(id);
 
     await prisma.auditLog.create({
       data: {

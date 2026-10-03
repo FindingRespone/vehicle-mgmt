@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isSuperAdmin } from '@/lib/roles';
 import { invalidateOldReminders } from '@/lib/reminders';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function PATCH(
@@ -172,6 +173,9 @@ export async function PATCH(
       },
     });
 
+    // Update vehicle availability based on loan status
+    await updateVehicleAvailability(id);
+
     return NextResponse.json(updatedLoan);
   } catch (error) {
     console.error('Update loan error:', error);
@@ -233,6 +237,9 @@ export async function DELETE(
         },
       },
     });
+
+    // Update vehicle availability after deleting loan
+    await updateVehicleAvailability(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

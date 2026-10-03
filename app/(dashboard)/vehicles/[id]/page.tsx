@@ -6,6 +6,7 @@ import AttachmentSection from '@/components/AttachmentSection';
 import VehicleMemberManagement from '@/components/VehicleMemberManagement';
 import InsurancePolicySection from '@/components/InsurancePolicySection';
 import LoanSection from '@/components/LoanSection';
+import { getVehicleAvailabilityWithReasons } from '@/lib/availability';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -92,6 +93,9 @@ export default async function VehicleDetailPage({
   const hasDrivingLicense = vehicle.attachments.some(a => a.category === 'DRIVING_LICENSE');
   const hasVehiclePhoto = vehicle.attachments.some(a => a.category === 'VEHICLE_PHOTO');
   const isMissingDocs = !hasDrivingLicense || !hasVehiclePhoto;
+
+  // Get availability reasons
+  const availabilityInfo = await getVehicleAvailabilityWithReasons(vehicle.id, session.user.role);
 
   return (
     <div className="space-y-6">
@@ -310,6 +314,18 @@ export default async function VehicleDetailPage({
                   >
                     {availabilityLabels[vehicle.availability]}
                   </span>
+                  {availabilityInfo.reasons.length > 0 && (
+                    <div className="mt-2 text-xs text-gray-600 space-y-1">
+                      {availabilityInfo.reasons.map((reason, index) => (
+                        <div key={index} className="flex items-start">
+                          <svg className="w-3 h-3 mr-1 mt-0.5 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </dd>
               </div>
               {isMissingDocs && (

@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
 import { invalidateOldReminders } from '@/lib/reminders';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -176,6 +177,9 @@ export async function PATCH(
       },
     });
 
+    // Update vehicle availability based on insurance status
+    await updateVehicleAvailability(id);
+
     return NextResponse.json(updatedPolicy);
   } catch (error) {
     console.error('Update policy error:', error);
@@ -221,6 +225,9 @@ export async function DELETE(
         entityId: policyId,
       },
     });
+
+    // Update vehicle availability after deleting insurance
+    await updateVehicleAvailability(id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

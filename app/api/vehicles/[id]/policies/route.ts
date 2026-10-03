@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -154,6 +155,9 @@ export async function POST(
         },
       },
     });
+
+    // Update vehicle availability based on new insurance
+    await updateVehicleAvailability(id);
 
     return NextResponse.json(policyWithAttachment);
   } catch (error) {
