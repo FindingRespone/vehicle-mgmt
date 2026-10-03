@@ -595,11 +595,14 @@ export default function LoanSection({
                                 <div className="font-medium mb-0.5">第 {inst.periodNumber} 期</div>
                                 <div className="text-xs">
                                   {new Date(inst.dueDate).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric' })}
-                                  {inst.paidAt && <span className="ml-1">✓</span>}
-                                  {!inst.paidAt && isInstallmentOverdue(inst.dueDate, inst.paidAt) && (
-                                    <span className="ml-1">逾期</span>
-                                  )}
                                 </div>
+                                {inst.paidAt ? (
+                                  <div className="text-xs font-medium mt-0.5 text-green-600">已还</div>
+                                ) : isInstallmentOverdue(inst.dueDate, inst.paidAt) ? (
+                                  <div className="text-xs font-medium mt-0.5">逾期</div>
+                                ) : (
+                                  <div className="text-xs mt-0.5 text-gray-500">未还</div>
+                                )}
                               </div>
                             ))}
                           </div>
