@@ -181,20 +181,39 @@ model Attachment {
   @@index([deletedAt])
 }
 
+enum ReminderStatus {
+  PENDING
+  SENT
+  CONFIRMED
+  SKIPPED
+}
+
 model Reminder {
-  id            String    @id @default(cuid())
+  id            String          @id @default(cuid())
   vehicleId     String
-  vehicle       Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicle       Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  sourceType    String
+  sourceId      String?
   title         String
-  description   String?   @db.Text
+  description   String?         @db.Text
   dueDate       DateTime
-  isCompleted   Boolean   @default(false)
+  remindAt      DateTime
+  offsetDays    Int
+  channel       String          @default("inbox")
+  status        ReminderStatus  @default(PENDING)
+  payload       String?         @db.Text
+  isCompleted   Boolean         @default(false)
   completedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  confirmedBy   String?
+  confirmedAt   DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([vehicleId])
   @@index([dueDate])
+  @@index([remindAt, status])
+  @@unique([vehicleId, sourceType, sourceId, offsetDays, channel])
 }
 
 model Device {
