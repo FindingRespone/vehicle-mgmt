@@ -40,12 +40,10 @@ export default async function DashboardPage() {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-      const installments = await prisma.loanInstallment.findMany({
+      // Get all unpaid installments for overdue calculation
+      const allUnpaidInstallments = await prisma.loanInstallment.findMany({
         where: {
-          dueDate: {
-            gte: firstDayOfMonth,
-            lte: lastDayOfMonth,
-          },
+          paidAt: null,
         },
         include: {
           loan: {
@@ -65,17 +63,26 @@ export default async function DashboardPage() {
         },
       });
 
-      const monthTotal = installments.reduce((sum, inst) => {
+      // Get current month installments for monthly total
+      const monthInstallments = await prisma.loanInstallment.findMany({
+        where: {
+          dueDate: {
+            gte: firstDayOfMonth,
+            lte: lastDayOfMonth,
+          },
+        },
+        include: {
+          loan: true,
+        },
+      });
+
+      const monthTotal = monthInstallments.reduce((sum, inst) => {
         return sum + Number(inst.loan.monthlyPayment);
       }, 0);
 
-      const vehicleCount = new Set(installments.map(inst => inst.loan.vehicleId)).size;
-
       monthlyLoanSummary = {
-        installments,
+        installments: allUnpaidInstallments,
         monthTotal,
-        installmentCount: installments.length,
-        vehicleCount,
         year: now.getFullYear(),
         month: now.getMonth() + 1,
       };

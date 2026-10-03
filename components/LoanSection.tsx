@@ -558,7 +558,7 @@ export default function LoanSection({
                           </div>
                           <div>
                             <dt className="text-xs text-gray-500 mb-0.5">年化利率</dt>
-                            <dd className="text-gray-900">{Number(loan.interestRate).toFixed(2)}%</dd>
+                            <dd className="text-gray-900">{Number(loan.interestRate).toFixed(4)}%</dd>
                           </div>
                           <div>
                             <dt className="text-xs text-gray-500 mb-0.5">月供</dt>

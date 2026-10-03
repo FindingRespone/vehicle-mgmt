@@ -86,6 +86,11 @@ export async function POST(
 
     const data = await request.json();
 
+    // Validate attachmentId is required
+    if (!data.attachmentId) {
+      return NextResponse.json({ error: '新建贷款必须上传合同影像' }, { status: 400 });
+    }
+
     // Validate required fields
     if (!data.lender || !data.loanAmount || !data.interestRate || !data.startDate || !data.endDate || !data.monthlyPayment || !data.installmentCount) {
       return NextResponse.json({ error: '请填写所有必填字段' }, { status: 400 });
@@ -101,15 +106,13 @@ export async function POST(
       return NextResponse.json({ error: '还款日期数量必须与分期次数一致' }, { status: 400 });
     }
 
-    // Validate attachmentId if provided
-    if (data.attachmentId) {
-      const attachment = await prisma.attachment.findUnique({
-        where: { id: data.attachmentId },
-      });
+    // Validate attachmentId
+    const attachment = await prisma.attachment.findUnique({
+      where: { id: data.attachmentId },
+    });
 
-      if (!attachment || attachment.category !== 'LOAN_CONTRACT' || attachment.deletedAt !== null) {
-        return NextResponse.json({ error: '无效的贷款合同附件' }, { status: 400 });
-      }
+    if (!attachment || attachment.category !== 'LOAN_CONTRACT' || attachment.deletedAt !== null) {
+      return NextResponse.json({ error: '无效的贷款合同附件' }, { status: 400 });
     }
 
     const loan = await prisma.loan.create({

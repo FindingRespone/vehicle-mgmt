@@ -42,6 +42,23 @@ export async function PATCH(
 
     const data = await request.json();
 
+    // Check if critical terms are being changed
+    const criticalTermsChanged = (
+      data.loanAmount !== undefined ||
+      data.interestRate !== undefined ||
+      data.monthlyPayment !== undefined ||
+      data.startDate !== undefined ||
+      data.endDate !== undefined ||
+      data.installmentCount !== undefined ||
+      data.installments !== undefined ||
+      data.lender !== undefined
+    );
+
+    // If critical terms are changed, require new attachment
+    if (criticalTermsChanged && !data.newAttachmentId) {
+      return NextResponse.json({ error: '变更贷款关键条款必须上传新的合同影像' }, { status: 400 });
+    }
+
     // Build update data object
     const updateData: any = {};
 

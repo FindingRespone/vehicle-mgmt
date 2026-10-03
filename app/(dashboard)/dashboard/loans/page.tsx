@@ -19,12 +19,10 @@ export default async function LoansPage() {
   const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  const installments = await prisma.loanInstallment.findMany({
+  // Get all unpaid installments for overdue calculation
+  const allUnpaidInstallments = await prisma.loanInstallment.findMany({
     where: {
-      dueDate: {
-        gte: firstDayOfMonth,
-        lte: lastDayOfMonth,
-      },
+      paidAt: null,
     },
     include: {
       loan: {
@@ -44,30 +42,40 @@ export default async function LoansPage() {
     },
   });
 
-  const monthTotal = installments.reduce((sum, inst) => {
+  // Get current month installments for monthly total
+  const monthInstallments = await prisma.loanInstallment.findMany({
+    where: {
+      dueDate: {
+        gte: firstDayOfMonth,
+        lte: lastDayOfMonth,
+      },
+    },
+    include: {
+      loan: true,
+    },
+  });
+
+  const monthTotal = monthInstallments.reduce((sum, inst) => {
     return sum + Number(inst.loan.monthlyPayment);
   }, 0);
 
-  const vehicleCount = new Set(installments.map(inst => inst.loan.vehicleId)).size;
+  // Overdue: all unpaid installments with dueDate < now
+  const overdueInstallments = allUnpaidInstallments.filter((inst: any) => {
+    const dueDate = new Date(inst.dueDate);
+    return dueDate < now;
+  });
+
+  // Pending: unpaid installments in current month with dueDate >= now
+  const pendingInstallments = allUnpaidInstallments.filter((inst: any) => {
+    const dueDate = new Date(inst.dueDate);
+    return dueDate >= firstDayOfMonth && dueDate <= lastDayOfMonth && dueDate >= now;
+  });
 
   const monthlyLoanSummary = {
-    installments,
     monthTotal,
-    installmentCount: installments.length,
-    vehicleCount,
     year: now.getFullYear(),
     month: now.getMonth() + 1,
   };
-
-  const overdueInstallments = installments.filter((inst: any) => {
-    const dueDate = new Date(inst.dueDate);
-    return dueDate < now && !inst.paidAt;
-  });
-
-  const pendingInstallments = installments.filter((inst: any) => {
-    const dueDate = new Date(inst.dueDate);
-    return dueDate >= now && !inst.paidAt;
-  });
 
   return (
     <div className="space-y-6">
@@ -107,9 +115,9 @@ export default async function LoansPage() {
       {/* Loan Repayments */}
       <div className="bg-white border border-gray-200">
         <div className="px-5 py-4">
-          {installments.length === 0 ? (
+          {overdueInstallments.length === 0 && pendingInstallments.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-sm">本月无需还款</p>
+              <p className="text-sm">暂无逾期或待还款项</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -145,7 +153,7 @@ export default async function LoansPage() {
                           </div>
                           <div className="text-right flex-shrink-0 ml-4">
                             <div className="text-sm text-gray-900">
-                              {monthlyLoanSummary.month}月{dueDay}日
+                              {dueDate.getFullYear()}年{dueDate.getMonth() + 1}月{dueDay}日
                             </div>
                             <div className="text-xs text-red-600 font-medium mt-0.5">
                               已逾期 {daysOverdue} 天

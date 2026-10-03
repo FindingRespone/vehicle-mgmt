@@ -127,7 +127,7 @@ model Loan {
   vehicle           Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   lender            String
   loanAmount        Decimal           @db.Decimal(12, 2)
-  interestRate      Decimal           @db.Decimal(5, 4)
+  interestRate      Decimal           @db.Decimal(6, 4)
   startDate         DateTime
   endDate           DateTime
   monthlyPayment    Decimal           @db.Decimal(10, 2)
