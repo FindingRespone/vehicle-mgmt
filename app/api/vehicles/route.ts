@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
 
     let vehicles;
 
-    if (isAdminOrAbove(session.user!.role)) {
+    if (canViewAllVehicles(session.user!.role)) {
       vehicles = await prisma.vehicle.findMany({
         include: {
           owner: {

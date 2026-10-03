@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canManageVehicles, canViewLoans, canViewAllVehicles } from '@/lib/roles';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import AttachmentSection from '@/components/AttachmentSection';
@@ -79,11 +80,12 @@ export default async function VehicleDetailPage({
     notFound();
   }
 
-  const isManager =
-    session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN';
-  const isSuperAdmin = session.user.role === 'SUPER_ADMIN';
+  const isManager = canManageVehicles(session.user.role);
+  const canViewLoan = canViewLoans(session.user.role);
+  const canViewAll = canViewAllVehicles(session.user.role);
 
-  if (!isManager) {
+  // Check access permission
+  if (!canViewAll) {
     const isMember = vehicle.members.some((m) => m.userId === session.user.id);
     if (vehicle.ownerUserId !== session.user.id && !isMember) {
       redirect('/vehicles');
@@ -238,7 +240,7 @@ export default async function VehicleDetailPage({
 
           <InsurancePolicySection vehicleId={vehicle.id} canManage={isManager} />
 
-          {isSuperAdmin && <LoanSection vehicleId={vehicle.id} />}
+          {canViewLoan && <LoanSection vehicleId={vehicle.id} />}
 
           <AttachmentSection vehicleId={vehicle.id} canUpload={isManager} userRole={session.user.role} />
 

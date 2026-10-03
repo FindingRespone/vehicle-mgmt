@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateVehicleAvailabilityFromData } from '@/lib/availability';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import Link from 'next/link';
 import { VehicleStatus, VehicleAvailability } from '@prisma/client';
 
@@ -62,7 +63,7 @@ export default async function VehiclesPage({
   let where: any = {};
 
   // RBAC: Filter by user permissions
-  if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+  if (!canViewAllVehicles(session.user.role)) {
     where.OR = [
       { ownerUserId: session.user.id },
       {
@@ -229,7 +230,7 @@ export default async function VehiclesPage({
             共 <span className="font-semibold mx-1">{totalCount}</span> 辆车辆
           </p>
         </div>
-        {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && (
+        {canManageVehicles(session.user.role) && (
           <Link
             href="/vehicles/new"
             className="btn btn-primary shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
@@ -310,7 +311,7 @@ export default async function VehiclesPage({
               ? '尝试调整搜索条件或清除筛选'
               : '还没有添加任何车辆信息'}
           </p>
-          {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && !search && !statusFilter && !availabilityFilter && !insuranceStatusFilter && (
+          {canManageVehicles(session.user.role) && !search && !statusFilter && !availabilityFilter && !insuranceStatusFilter && (
             <Link
               href="/vehicles/new"
               className="btn btn-primary inline-flex"
@@ -494,7 +495,7 @@ export default async function VehiclesPage({
                       >
                         查看
                       </Link>
-                      {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && (
+                      {canManageVehicles(session.user.role) && (
                         <>
                           <span className="mx-2 text-gray-300">|</span>
                           <Link

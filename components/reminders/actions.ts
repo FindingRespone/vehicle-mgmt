@@ -2,6 +2,7 @@
 
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canConfirmReminders } from '@/lib/roles';
 import { revalidatePath } from 'next/cache';
 
 export async function confirmReminder(reminderId: string) {
@@ -14,6 +15,11 @@ export async function confirmReminder(reminderId: string) {
 
     const userId = session.user.id;
     const userRole = session.user.role;
+
+    // Check if user can confirm reminders
+    if (!canConfirmReminders(userRole)) {
+      return { success: false, error: '财务只读角色无权确认提醒' };
+    }
 
     // Fetch the reminder
     const reminder = await prisma.reminder.findUnique({

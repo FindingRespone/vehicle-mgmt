@@ -90,6 +90,7 @@ export function ReminderCard({ reminder, userRole }: ReminderCardProps) {
 
   // Don't show loan amount to non-super-admin
   const shouldHideDetails = reminder.sourceType === 'LoanInstallment' && userRole !== 'SUPER_ADMIN';
+  const canConfirm = userRole !== 'FINANCE_READONLY';
 
   return (
     <div className="p-4 hover:bg-gray-50 transition-colors">
@@ -136,6 +137,7 @@ export function ReminderCard({ reminder, userRole }: ReminderCardProps) {
           </div>
         </div>
 
+        {canConfirm && (
         <div className="ml-4 flex-shrink-0">
           {!showWarning ? (
             <button
@@ -168,6 +170,7 @@ export function ReminderCard({ reminder, userRole }: ReminderCardProps) {
             </div>
           )}
         </div>
+        )}
       </div>
     </div>
   );
