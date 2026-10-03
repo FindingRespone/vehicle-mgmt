@@ -33,6 +33,7 @@ export default async function DashboardPage() {
   let soonExpiringPolicies: any[] = [];
   let expiredInspections: any[] = [];
   let soonDueInspections: any[] = [];
+  let monthlyLoanSummary: any = null;
 
   if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') {
     // Admin sees all vehicles
@@ -46,6 +47,53 @@ export default async function DashboardPage() {
     inUseVehicles = await prisma.vehicle.count({
       where: { status: 'IN_USE' },
     });
+
+    // Fetch monthly loan summary for SUPER_ADMIN only
+    if (session.user.role === 'SUPER_ADMIN') {
+      const now = new Date();
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      const installments = await prisma.loanInstallment.findMany({
+        where: {
+          dueDate: {
+            gte: firstDayOfMonth,
+            lte: lastDayOfMonth,
+          },
+        },
+        include: {
+          loan: {
+            include: {
+              vehicle: {
+                select: {
+                  id: true,
+                  plateNo: true,
+                  brandModel: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          dueDate: 'asc',
+        },
+      });
+
+      const monthTotal = installments.reduce((sum, inst) => {
+        return sum + Number(inst.loan.monthlyPayment);
+      }, 0);
+
+      const vehicleCount = new Set(installments.map(inst => inst.loan.vehicleId)).size;
+
+      monthlyLoanSummary = {
+        installments,
+        monthTotal,
+        installmentCount: installments.length,
+        vehicleCount,
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+      };
+    }
 
     // Get count of insurance policies expiring within 30 days and expired
     const now = new Date();
@@ -683,6 +731,124 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Loan Repayments - SUPER_ADMIN only */}
+      {session.user.role === 'SUPER_ADMIN' && monthlyLoanSummary && (
+        <div className="card">
+          <div className="px-6 py-5 border-b border-gray-200">
+            <h3 className="text-lg font-medium leading-6 text-gray-900">贷款还款事项</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {monthlyLoanSummary.year}年{monthlyLoanSummary.month}月应还贷款
+            </p>
+          </div>
+          <div className="px-6 py-4">
+            {monthlyLoanSummary.installments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="mt-2">本月无需还款</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Info */}
+                <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center bg-blue-100">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        本月应还 {monthlyLoanSummary.installmentCount} 笔，共计 {monthlyLoanSummary.vehicleCount} 辆车
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        总金额: ¥{monthlyLoanSummary.monthTotal.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Installment List */}
+                <div className="space-y-3">
+                  {monthlyLoanSummary.installments.map((installment: any) => {
+                    const dueDate = new Date(installment.dueDate);
+                    const today = new Date();
+                    const isOverdue = dueDate < today && !installment.paidAt;
+                    const isPaid = !!installment.paidAt;
+                    const dueDay = dueDate.getDate();
+
+                    return (
+                      <Link
+                        key={installment.id}
+                        href={`/vehicles/${installment.loan.vehicle.id}`}
+                        className={`flex items-center justify-between p-4 rounded-lg transition-colors border ${
+                          isPaid
+                            ? 'bg-green-50 border-green-200 hover:bg-green-100'
+                            : isOverdue
+                            ? 'bg-red-50 border-red-200 hover:bg-red-100'
+                            : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                            isPaid
+                              ? 'bg-green-100'
+                              : isOverdue
+                              ? 'bg-red-100'
+                              : 'bg-gray-100'
+                          }`}>
+                            {isPaid ? (
+                              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            ) : isOverdue ? (
+                              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {installment.loan.vehicle.plateNo}
+                              {isPaid && <span className="ml-2 text-xs text-green-600 font-medium">已还款</span>}
+                              {isOverdue && <span className="ml-2 text-xs text-red-600 font-medium">已逾期</span>}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              第 {installment.periodNumber} 期 · {installment.loan.lender}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              应还金额: ¥{Number(installment.loan.monthlyPayment).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="text-right">
+                            <p className="text-sm font-medium text-gray-900">
+                              {monthlyLoanSummary.month}月{dueDay}日
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {dueDate.toLocaleDateString('zh-CN')}
+                            </p>
+                          </div>
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
