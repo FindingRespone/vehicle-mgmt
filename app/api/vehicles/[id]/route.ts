@@ -92,8 +92,6 @@ export async function PUT(
         status: data.status,
         availability: data.availability,
         driver: data.driver || null,
-        purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
-        registerDate: data.registerDate ? new Date(data.registerDate) : null,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,

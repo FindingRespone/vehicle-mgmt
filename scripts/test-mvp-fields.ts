@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { parseDrivingLicenseMeta, serializeDrivingLicenseMeta } from '../lib/drivingLicense';
 import { buildFleetExportCsv } from '../lib/export';
 import { getVehicleAvailabilityWithReasons } from '../lib/availability';
@@ -20,12 +20,10 @@ async function main() {
     throw new Error('缺少种子用户或车辆');
   }
 
-  console.log('【1】购置日 / 上牌日 / 行驶证摘要');
+  console.log('【1】行驶证摘要');
   const updated = await prisma.vehicle.update({
     where: { id: vehicle.id },
     data: {
-      purchaseDate: new Date('2024-03-01'),
-      registerDate: new Date('2024-03-15'),
       drivingLicenseMeta: parseDrivingLicenseMeta({
         licenseNo: '110012345678',
         vehicleType: '重型厢式货车',
@@ -35,10 +33,12 @@ async function main() {
     },
   });
   const parsed = parseDrivingLicenseMeta(updated.drivingLicenseMeta);
-  console.log(`  购置日: ${updated.purchaseDate?.toISOString().slice(0, 10)}`);
-  console.log(`  上牌日: ${updated.registerDate?.toISOString().slice(0, 10)}`);
   console.log(`  摘要: ${parsed.licenseNo} / ${parsed.vehicleType} / ${parsed.ownerName} / ${parsed.useNature}`);
-  console.log(updated.purchaseDate && parsed.licenseNo ? '  ✓ 字段可读写' : '  ✗ 字段写入失败');
+  console.log(parsed.licenseNo ? '  ✓ 行驶证摘要可读写' : '  ✗ 行驶证摘要失败');
+  await prisma.vehicle.update({
+    where: { id: vehicle.id },
+    data: { drivingLicenseMeta: Prisma.DbNull },
+  });
 
   console.log('\n【2】贷款合同号');
   const loan = await prisma.loan.findFirst();

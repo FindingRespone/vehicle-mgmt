@@ -69,8 +69,6 @@ model Vehicle {
   availability            VehicleAvailability  @default(AVAILABLE)
   ownerUserId             String
   owner                   User                 @relation("VehicleOwner", fields: [ownerUserId], references: [id])
-  purchaseDate            DateTime?
-  registerDate            DateTime?
   annualInspectionDueAt   DateTime?
   drivingLicenseMeta      Json?
   driver                  String?

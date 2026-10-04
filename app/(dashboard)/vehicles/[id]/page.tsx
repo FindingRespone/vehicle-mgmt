@@ -218,22 +218,6 @@ export default async function VehicleDetailPage({
                   )}
                 </dd>
               </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">购置日</dt>
-                <dd className="text-sm text-gray-900">
-                  {vehicle.purchaseDate
-                    ? new Date(vehicle.purchaseDate).toLocaleDateString('zh-CN')
-                    : <span className="text-gray-400">未填写</span>}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">上牌日</dt>
-                <dd className="text-sm text-gray-900">
-                  {vehicle.registerDate
-                    ? new Date(vehicle.registerDate).toLocaleDateString('zh-CN')
-                    : <span className="text-gray-400">未填写</span>}
-                </dd>
-              </div>
             </dl>
           </div>
 

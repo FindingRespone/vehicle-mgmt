@@ -26,12 +26,6 @@ export default function VehicleForm({
     status: vehicle?.status || 'IN_USE',
     availability: vehicle?.availability || 'AVAILABLE',
     driver: vehicle?.driver || '',
-    purchaseDate: vehicle?.purchaseDate
-      ? new Date(vehicle.purchaseDate).toISOString().split('T')[0]
-      : '',
-    registerDate: vehicle?.registerDate
-      ? new Date(vehicle.registerDate).toISOString().split('T')[0]
-      : '',
     annualInspectionDueAt: vehicle?.annualInspectionDueAt
       ? new Date(vehicle.annualInspectionDueAt).toISOString().split('T')[0]
       : '',
@@ -76,12 +70,6 @@ export default function VehicleForm({
           status: formData.status,
           availability: formData.availability,
           driver: formData.driver,
-          purchaseDate: formData.purchaseDate
-            ? new Date(formData.purchaseDate).toISOString()
-            : null,
-          registerDate: formData.registerDate
-            ? new Date(formData.registerDate).toISOString()
-            : null,
           annualInspectionDueAt: formData.annualInspectionDueAt
             ? new Date(formData.annualInspectionDueAt).toISOString()
             : null,
@@ -243,34 +231,6 @@ export default function VehicleForm({
           </div>
 
           <div>
-            <label htmlFor="purchaseDate" className="block text-sm font-medium text-gray-700 mb-2">
-              购置日 <span className="text-gray-400 text-xs">选填</span>
-            </label>
-            <input
-              type="date"
-              name="purchaseDate"
-              id="purchaseDate"
-              value={formData.purchaseDate}
-              onChange={handleChange}
-              className="input-field"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="registerDate" className="block text-sm font-medium text-gray-700 mb-2">
-              上牌日 <span className="text-gray-400 text-xs">选填</span>
-            </label>
-            <input
-              type="date"
-              name="registerDate"
-              id="registerDate"
-              value={formData.registerDate}
-              onChange={handleChange}
-              className="input-field"
-            />
-          </div>
-
-          <div>
             <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
               车辆状态
             </label>
@@ -315,7 +275,7 @@ export default function VehicleForm({
             </svg>
             行驶证摘要
           </h2>
-          <p className="mt-1 text-sm text-gray-600">选填，仅记录摘要，不上牌日另存一份</p>
+          <p className="mt-1 text-sm text-gray-600">选填，仅记录摘要，不新开列</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
