@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canViewLoans } from '@/lib/roles';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
@@ -10,8 +11,8 @@ export default async function LoansPage() {
     return null;
   }
 
-  // Only SUPER_ADMIN can access
-  if (session.user.role !== 'SUPER_ADMIN') {
+  // Only SUPER_ADMIN and FINANCE_READONLY can access
+  if (!canViewLoans(session.user.role)) {
     redirect('/dashboard');
   }
 

@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { canViewAllVehicles, canViewLoans } from '@/lib/roles';
 import Link from 'next/link';
 
 export default async function DashboardPage() {
@@ -22,8 +23,8 @@ export default async function DashboardPage() {
   let soonDueInspections: any[] = [];
   let monthlyLoanSummary: any = null;
 
-  if (session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') {
-    // Admin sees all vehicles
+  if (canViewAllVehicles(session.user.role)) {
+    // Admin/Finance sees all vehicles
     totalVehicles = await prisma.vehicle.count();
     availableVehicles = await prisma.vehicle.count({
       where: { availability: 'AVAILABLE' },
@@ -35,8 +36,8 @@ export default async function DashboardPage() {
       where: { status: 'IN_USE' },
     });
 
-    // Fetch monthly loan summary for SUPER_ADMIN only
-    if (session.user.role === 'SUPER_ADMIN') {
+    // Fetch monthly loan summary for SUPER_ADMIN and FINANCE_READONLY
+    if (canViewLoans(session.user.role)) {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
@@ -338,7 +339,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick Links */}
-      <div className={`grid gap-4 ${session.user.role === 'SUPER_ADMIN' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
+      <div className={`grid gap-4 ${canViewLoans(session.user.role) ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1 md:grid-cols-2'}`}>
         {/* Insurance Link */}
         <Link
           href="/dashboard/insurance"
@@ -385,8 +386,8 @@ export default async function DashboardPage() {
           </div>
         </Link>
 
-        {/* Loans Link - SUPER_ADMIN only */}
-        {session.user.role === 'SUPER_ADMIN' && monthlyLoanSummary && (
+        {/* Loans Link - SUPER_ADMIN and FINANCE_READONLY */}
+        {canViewLoans(session.user.role) && monthlyLoanSummary && (
           <Link
             href="/dashboard/loans"
             className="block bg-white border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all"

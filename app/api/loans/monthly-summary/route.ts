@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { isSuperAdmin } from '@/lib/roles';
+import { canViewLoans } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -11,8 +11,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
-    if (!isSuperAdmin(session.user.role)) {
-      return NextResponse.json({ error: '只有超级管理员可以查看贷款信息' }, { status: 403 });
+    if (!canViewLoans(session.user.role)) {
+      return NextResponse.json({ error: '只有超级管理员和财务可以查看贷款信息' }, { status: 403 });
     }
 
     const now = new Date();

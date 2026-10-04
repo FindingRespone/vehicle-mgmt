@@ -88,8 +88,8 @@ export function ReminderCard({ reminder, userRole }: ReminderCardProps) {
     }
   };
 
-  // Don't show loan amount to non-super-admin
-  const shouldHideDetails = reminder.sourceType === 'LoanInstallment' && userRole !== 'SUPER_ADMIN';
+  // Don't show loan amount to non-super-admin and non-finance users
+  const shouldHideDetails = reminder.sourceType === 'LoanInstallment' && userRole !== 'SUPER_ADMIN' && userRole !== 'FINANCE_READONLY';
   const canConfirm = userRole !== 'FINANCE_READONLY';
 
   return (
