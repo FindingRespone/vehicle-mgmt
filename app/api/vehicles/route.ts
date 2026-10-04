@@ -25,9 +25,12 @@ export async function POST(request: Request) {
         availability: data.availability || 'AVAILABLE',
         driver: data.driver || null,
         ownerUserId: data.ownerUserId || session.user!.id,
+        purchaseDate: data.purchaseDate ? new Date(data.purchaseDate) : null,
+        registerDate: data.registerDate ? new Date(data.registerDate) : null,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,
+        drivingLicenseMeta: data.drivingLicenseMeta || null,
         remark: data.remark || null,
       },
     });

@@ -120,6 +120,7 @@ export async function POST(
       data: {
         vehicleId: id,
         lender: data.lender,
+        contractNo: data.contractNo || null,
         loanAmount: data.loanAmount,
         interestRate: data.interestRate,
         startDate: new Date(data.startDate),

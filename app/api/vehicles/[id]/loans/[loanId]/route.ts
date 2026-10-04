@@ -65,6 +65,7 @@ export async function PATCH(
     const updateData: any = {};
 
     if (data.lender !== undefined) updateData.lender = data.lender;
+    if (data.contractNo !== undefined) updateData.contractNo = data.contractNo || null;
     if (data.loanAmount !== undefined) updateData.loanAmount = data.loanAmount;
     if (data.interestRate !== undefined) updateData.interestRate = data.interestRate;
     if (data.startDate !== undefined) updateData.startDate = new Date(data.startDate);

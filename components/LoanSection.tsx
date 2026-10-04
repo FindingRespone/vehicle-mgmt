@@ -24,6 +24,7 @@ interface LoanInstallment {
 interface Loan {
   id: string;
   lender: string;
+  contractNo: string | null;
   loanAmount: string;
   interestRate: string;
   startDate: string;
@@ -56,6 +57,7 @@ export default function LoanSection({
   const [originalLoan, setOriginalLoan] = useState<Loan | null>(null);
   const [formData, setFormData] = useState({
     lender: '',
+    contractNo: '',
     loanAmount: '',
     interestRate: '',
     startDate: '',
@@ -94,6 +96,7 @@ export default function LoanSection({
   const resetForm = () => {
     setFormData({
       lender: '',
+      contractNo: '',
       loanAmount: '',
       interestRate: '',
       startDate: '',
@@ -299,6 +302,10 @@ export default function LoanSection({
         updatePayload.installments = installments;
       }
 
+      if ((formData.contractNo || '') !== (originalLoan.contractNo || '')) {
+        updatePayload.contractNo = formData.contractNo;
+      }
+
       // Always allow remark changes
       if (formData.remark !== (originalLoan.remark || '')) {
         updatePayload.remark = formData.remark;
@@ -388,6 +395,7 @@ export default function LoanSection({
     setOriginalLoan(loan);
     setFormData({
       lender: loan.lender,
+      contractNo: loan.contractNo || '',
       loanAmount: loan.loanAmount,
       interestRate: loan.interestRate,
       startDate: loan.startDate.split('T')[0],
@@ -462,6 +470,16 @@ export default function LoanSection({
                 onChange={(e) => setFormData({ ...formData, lender: e.target.value })}
                 className="input-field text-sm"
                 placeholder="如：工商银行、融资租赁公司等"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">合同号</label>
+              <input
+                type="text"
+                value={formData.contractNo}
+                onChange={(e) => setFormData({ ...formData, contractNo: e.target.value })}
+                className="input-field text-sm"
+                placeholder="选填"
               />
             </div>
             <div>
@@ -610,6 +628,9 @@ export default function LoanSection({
                           <h3 className="text-base font-semibold text-gray-900">{loan.lender}</h3>
                           {getStatusBadge(loan.endDate)}
                         </div>
+                        {loan.contractNo && (
+                          <p className="text-xs text-gray-500 mb-2">合同号：{loan.contractNo}</p>
+                        )}
                         <dl className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                           <div>
                             <dt className="text-xs text-gray-500 mb-0.5">贷款金额</dt>
@@ -737,6 +758,15 @@ export default function LoanSection({
                           type="text"
                           value={formData.lender}
                           onChange={(e) => setFormData({ ...formData, lender: e.target.value })}
+                          className="input-field text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">合同号</label>
+                        <input
+                          type="text"
+                          value={formData.contractNo}
+                          onChange={(e) => setFormData({ ...formData, contractNo: e.target.value })}
                           className="input-field text-sm"
                         />
                       </div>

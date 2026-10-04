@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateVehicleAvailabilityFromData } from '@/lib/availability';
 import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import ExportButton from '@/components/ExportButton';
 import Link from 'next/link';
 import { VehicleStatus, VehicleAvailability } from '@prisma/client';
 
@@ -230,17 +231,20 @@ export default async function VehiclesPage({
             共 <span className="font-semibold mx-1">{totalCount}</span> 辆车辆
           </p>
         </div>
-        {canManageVehicles(session.user.role) && (
-          <Link
-            href="/vehicles/new"
-            className="btn btn-primary shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            新建车辆
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButton />
+          {canManageVehicles(session.user.role) && (
+            <Link
+              href="/vehicles/new"
+              className="btn btn-primary shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              新建车辆
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Search and Filters */}

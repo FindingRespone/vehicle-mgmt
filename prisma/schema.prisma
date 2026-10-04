@@ -69,6 +69,8 @@ model Vehicle {
   availability            VehicleAvailability  @default(AVAILABLE)
   ownerUserId             String
   owner                   User                 @relation("VehicleOwner", fields: [ownerUserId], references: [id])
+  purchaseDate            DateTime?
+  registerDate            DateTime?
   annualInspectionDueAt   DateTime?
   drivingLicenseMeta      Json?
   driver                  String?
@@ -126,6 +128,7 @@ model Loan {
   vehicleId         String
   vehicle           Vehicle           @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   lender            String
+  contractNo        String?
   loanAmount        Decimal           @db.Decimal(12, 2)
   interestRate      Decimal           @db.Decimal(7, 4)
   startDate         DateTime

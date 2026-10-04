@@ -56,6 +56,20 @@ export async function GET(
     const filepath = join(/*turbopackIgnore: true*/ process.cwd(), attachment.filepath);
     const fileBuffer = await readFile(filepath);
 
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        vehicleId: id,
+        action: 'DOWNLOAD_ATTACHMENT',
+        entityType: 'Attachment',
+        entityId: attachmentId,
+        changes: {
+          category: attachment.category,
+          filename: attachment.originalFilename,
+        },
+      },
+    });
+
     return new NextResponse(fileBuffer, {
       headers: {
         'Content-Type': attachment.mimeType,
