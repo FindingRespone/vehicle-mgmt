@@ -16,9 +16,9 @@ export async function GET(
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
-    // Only SUPER_ADMIN and FINANCE_READONLY can access loan data
+    // Only SUPER_ADMIN can access loan data
     if (!canViewLoans(session.user.role)) {
-      return NextResponse.json({ error: '只有超级管理员和财务可以查看贷款信息' }, { status: 403 });
+      return NextResponse.json({ error: '只有超级管理员可以查看贷款信息' }, { status: 403 });
     }
 
     const vehicle = await prisma.vehicle.findUnique({

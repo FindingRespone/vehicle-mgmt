@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canAccessLoanContract, canManageVehicles, canViewAllVehicles, canViewLoans } from '@/lib/roles';
+import { canAccessLoanContract, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -42,8 +42,8 @@ export async function GET(
       where: {
         vehicleId: id,
         deletedAt: null,
-        // Filter LOAN_CONTRACT at query level for users who can't view loans
-        ...(canViewLoans(session.user.role)
+        // Filter LOAN_CONTRACT at query level for non-super-admins
+        ...(canAccessLoanContract(session.user.role)
           ? {}
           : { category: { not: 'LOAN_CONTRACT' } }),
       },

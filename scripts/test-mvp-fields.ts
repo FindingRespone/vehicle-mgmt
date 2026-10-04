@@ -1,9 +1,10 @@
 #!/usr/bin/env tsx
 
 import { Prisma, PrismaClient } from '@prisma/client';
-import { parseDrivingLicenseMeta, serializeDrivingLicenseMeta } from '../lib/drivingLicense';
+import { parseDrivingLicenseMeta } from '../lib/drivingLicense';
 import { buildFleetExportCsv } from '../lib/export';
 import { getVehicleAvailabilityWithReasons } from '../lib/availability';
+import { canViewLoans, canViewAllVehicles } from '../lib/roles';
 
 const prisma = new PrismaClient();
 
@@ -16,7 +17,7 @@ async function main() {
   const superadmin = await prisma.user.findUnique({ where: { username: 'superadmin' } });
   const vehicle = await prisma.vehicle.findFirst({ orderBy: { createdAt: 'asc' } });
 
-  if (!finance || !admin || !member || !superadmin || !vehicle) {
+  if (!admin || !member || !superadmin || !vehicle) {
     throw new Error('缺少种子用户或车辆');
   }
 
@@ -68,31 +69,34 @@ async function main() {
     });
     console.log(`  新建合同号: ${created.contractNo}`);
     console.log('  ✓ 无贷款时也能写入合同号');
+    await prisma.loan.delete({ where: { id: created.id } });
   }
 
   console.log('\n【3】导出范围');
-  const financeCsv = await buildFleetExportCsv(finance.id, 'FINANCE_READONLY');
+  const superCsv = await buildFleetExportCsv(superadmin.id, 'SUPER_ADMIN');
   const adminCsv = await buildFleetExportCsv(admin.id, 'ADMIN');
   const memberCsv = await buildFleetExportCsv(member.id, 'VEHICLE_MEMBER');
-  console.log(`  财务含贷款: ${financeCsv.includes('\n贷款\n') && financeCsv.includes('\n还款计划\n') ? '✓' : '✗'}`);
+  console.log(`  超管含贷款: ${superCsv.includes('\n贷款\n') && superCsv.includes('\n还款计划\n') ? '✓' : '✗'}`);
   console.log(`  管理员不含贷款: ${!adminCsv.includes('\n贷款\n') ? '✓' : '✗'}`);
   console.log(`  成员不含贷款: ${!memberCsv.includes('\n贷款\n') ? '✓' : '✗'}`);
-  console.log(`  不含定位字段: ${!financeCsv.includes('lastLat') && !financeCsv.includes('lastLng') ? '✓' : '✗'}`);
+  console.log(`  不含定位字段: ${!superCsv.includes('lastLat') && !superCsv.includes('lastLng') ? '✓' : '✗'}`);
 
-  console.log('\n【4】财务可用性原因');
-  const financeReasons = await getVehicleAvailabilityWithReasons(vehicle.id, 'FINANCE_READONLY');
-  const memberReasons = await getVehicleAvailabilityWithReasons(vehicle.id, 'VEHICLE_MEMBER');
-  console.log(`  财务原因: ${financeReasons.reasons.join(', ') || '无'}`);
-  console.log(`  成员原因: ${memberReasons.reasons.join(', ') || '无'}`);
-  if (financeReasons.reasons.includes('贷款严重逾期')) {
-    console.log(memberReasons.reasons.includes('贷款严重逾期') ? '  ✗ 成员不该看到贷款原因' : '  ✓ 财务可见贷款逾期，成员不可见');
+  console.log('\n【4】可用性原因');
+  const superReasons = await getVehicleAvailabilityWithReasons(vehicle.id, 'SUPER_ADMIN');
+  const adminReasons = await getVehicleAvailabilityWithReasons(vehicle.id, 'ADMIN');
+  console.log(`  超管原因: ${superReasons.reasons.join(', ') || '无'}`);
+  console.log(`  管理员原因: ${adminReasons.reasons.join(', ') || '无'}`);
+  if (superReasons.reasons.includes('贷款严重逾期')) {
+    console.log(adminReasons.reasons.includes('贷款严重逾期') ? '  ✗ 管理员不该看到贷款原因' : '  ✓ 仅超管可见贷款逾期');
   } else {
-    console.log('  ✓ 当前无贷款逾期；过滤逻辑已按角色放行财务');
+    console.log('  ✓ 贷款原因仍只对超管开放');
   }
 
-  console.log('\n【5】财务账号');
-  console.log(`  username=${finance.username} role=${finance.role}`);
-  console.log(finance.role === 'FINANCE_READONLY' ? '  ✓ finance 账号可用' : '  ✗ 角色不对');
+  console.log('\n【5】财务账号与入口');
+  console.log(`  finance 用户: ${finance ? '仍存在 ✗' : '已清除 ✓'}`);
+  console.log(`  财务可看贷款: ${canViewLoans('FINANCE_READONLY') ? '✗ 仍放行' : '✓ 已关闭'}`);
+  console.log(`  财务可看全车: ${canViewAllVehicles('FINANCE_READONLY') ? '✗ 仍放行' : '✓ 已关闭'}`);
+  console.log(`  超管可看贷款: ${canViewLoans('SUPER_ADMIN') ? '✓' : '✗'}`);
 
   console.log('\n验收脚本完成');
 }

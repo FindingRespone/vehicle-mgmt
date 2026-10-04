@@ -18,7 +18,6 @@ export default function Navbar({ user }: NavbarProps) {
     VEHICLE_MEMBER: '普通',
     ADMIN: '管理员',
     SUPER_ADMIN: '超级管理员',
-    FINANCE_READONLY: '财务只读',
   };
 
   const isActive = (path: string) => {

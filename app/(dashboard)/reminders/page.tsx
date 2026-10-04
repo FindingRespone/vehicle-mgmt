@@ -25,11 +25,6 @@ export default async function RemindersPage() {
     whereClause = {
       ...whereClause,
     };
-  } else if (userRole === 'FINANCE_READONLY') {
-    // Finance can see all reminders including loan reminders
-    whereClause = {
-      ...whereClause,
-    };
   } else if (userRole === 'ADMIN') {
     // Admin can see insurance and inspection reminders only
     whereClause = {

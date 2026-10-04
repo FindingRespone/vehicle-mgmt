@@ -117,7 +117,7 @@ export async function buildFleetExportCsv(userId: string, role: string): Promise
     }
   }
 
-  // Loans are only exported for SUPER_ADMIN and FINANCE_READONLY
+  // Loans are only exported for SUPER_ADMIN
   if (includeLoans) {
     sections.push('');
     sections.push('贷款');

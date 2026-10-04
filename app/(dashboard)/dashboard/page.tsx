@@ -36,7 +36,7 @@ export default async function DashboardPage() {
       where: { status: 'IN_USE' },
     });
 
-    // Fetch monthly loan summary for SUPER_ADMIN and FINANCE_READONLY
+    // Fetch monthly loan summary for SUPER_ADMIN only
     if (canViewLoans(session.user.role)) {
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -386,7 +386,7 @@ export default async function DashboardPage() {
           </div>
         </Link>
 
-        {/* Loans Link - SUPER_ADMIN and FINANCE_READONLY */}
+        {/* Loans Link - SUPER_ADMIN only */}
         {canViewLoans(session.user.role) && monthlyLoanSummary && (
           <Link
             href="/dashboard/loans"

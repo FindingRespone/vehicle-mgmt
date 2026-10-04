@@ -11,7 +11,7 @@ export default async function LoansPage() {
     return null;
   }
 
-  // Only SUPER_ADMIN and FINANCE_READONLY can access
+  // Only SUPER_ADMIN can access
   if (!canViewLoans(session.user.role)) {
     redirect('/dashboard');
   }

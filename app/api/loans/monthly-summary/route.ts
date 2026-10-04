@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     }
 
     if (!canViewLoans(session.user.role)) {
-      return NextResponse.json({ error: '只有超级管理员和财务可以查看贷款信息' }, { status: 403 });
+      return NextResponse.json({ error: '只有超级管理员可以查看贷款信息' }, { status: 403 });
     }
 
     const now = new Date();

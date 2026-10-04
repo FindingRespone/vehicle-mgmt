@@ -215,7 +215,7 @@ export async function updateVehicleAvailability(vehicleId: string): Promise<void
 /**
  * Get availability status with reasons for display
  * Returns current calculated availability and reasons (not database value)
- * Respects permissions: only SUPER_ADMIN and FINANCE_READONLY can see loan-related reasons
+ * Respects permissions: only SUPER_ADMIN can see loan-related reasons
  */
 export async function getVehicleAvailabilityWithReasons(
   vehicleId: string,
@@ -232,8 +232,8 @@ export async function getVehicleAvailabilityWithReasons(
   
   const result = await calculateVehicleAvailability(vehicleId);
   
-  // Filter out loan reasons for users who can't view loans
-  if (userRole !== 'SUPER_ADMIN' && userRole !== 'FINANCE_READONLY') {
+  // Filter out loan reasons for non-super-admin users
+  if (userRole !== 'SUPER_ADMIN') {
     result.reasons = result.reasons.filter(r => r !== '贷款严重逾期');
   }
   

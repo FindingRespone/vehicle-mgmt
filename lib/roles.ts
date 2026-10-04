@@ -8,18 +8,14 @@ export function isSuperAdmin(role: string | undefined | null): boolean {
   return role === 'SUPER_ADMIN';
 }
 
-export function isFinanceReadOnly(role: string | undefined | null): boolean {
-  return role === 'FINANCE_READONLY';
-}
-
-/** Can view all vehicles (admins and finance) */
+/** Can view all vehicles (admins only; finance is not a live role) */
 export function canViewAllVehicles(role: string | undefined | null): boolean {
-  return isAdminOrAbove(role) || isFinanceReadOnly(role);
+  return isAdminOrAbove(role);
 }
 
 /** Can view loans and installments */
 export function canViewLoans(role: string | undefined | null): boolean {
-  return isSuperAdmin(role) || isFinanceReadOnly(role);
+  return isSuperAdmin(role);
 }
 
 /** Can create/update/delete vehicles and non-loan attachments */
@@ -34,9 +30,4 @@ export function canAccessLoanContract(role: string | undefined | null): boolean 
 
 export function canManageMembers(role: string | undefined | null): boolean {
   return isAdminOrAbove(role);
-}
-
-/** Can confirm reminders */
-export function canConfirmReminders(role: string | undefined | null): boolean {
-  return role !== 'FINANCE_READONLY';
 }

@@ -63,24 +63,17 @@ async function main() {
 
   console.log('创建超级管理员用户:', superadmin);
 
-  const financePassword = await bcrypt.hash('finance123', 10);
-
-  const finance = await prisma.user.upsert({
-    where: { username: 'finance' },
-    update: {
-      password: financePassword,
-      name: '财务只读',
-      role: 'FINANCE_READONLY',
-    },
-    create: {
-      username: 'finance',
-      password: financePassword,
-      name: '财务只读',
-      role: 'FINANCE_READONLY',
+  const removedFinance = await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { username: 'finance' },
+        { role: 'FINANCE_READONLY' },
+      ],
     },
   });
-
-  console.log('创建财务只读用户:', finance);
+  if (removedFinance.count > 0) {
+    console.log(`已清除财务只读账号: ${removedFinance.count}`);
+  }
 
   const vehicle = await prisma.vehicle.upsert({
     where: { plateNo: '京A12345' },
@@ -118,7 +111,6 @@ async function main() {
   console.log('超级管理员 - 用户名: superadmin, 密码: superadmin123');
   console.log('管理员 - 用户名: admin, 密码: admin123');
   console.log('普通成员 - 用户名: member, 密码: member123');
-  console.log('财务只读 - 用户名: finance, 密码: finance123');
 }
 
 main()
