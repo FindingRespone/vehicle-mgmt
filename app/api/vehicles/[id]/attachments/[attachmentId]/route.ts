@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canAccessLoanContract, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { canAccessLoanContract, canDownloadAttachments, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -15,6 +15,10 @@ export async function GET(
 
     if (!session) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
+    }
+
+    if (!canDownloadAttachments(session.user.role)) {
+      return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
     const vehicle = await prisma.vehicle.findUnique({

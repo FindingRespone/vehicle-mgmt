@@ -1,7 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateVehicleAvailabilityFromData } from '@/lib/availability';
-import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { canExportFleet, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import ExportButton from '@/components/ExportButton';
 import Link from 'next/link';
 import { VehicleStatus, VehicleAvailability } from '@prisma/client';
@@ -232,7 +232,7 @@ export default async function VehiclesPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <ExportButton />
+          {canExportFleet(session.user.role) && <ExportButton />}
           {canManageVehicles(session.user.role) && (
             <Link
               href="/vehicles/new"

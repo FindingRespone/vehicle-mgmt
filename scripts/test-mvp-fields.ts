@@ -4,7 +4,7 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { parseDrivingLicenseMeta } from '../lib/drivingLicense';
 import { buildFleetExportCsv } from '../lib/export';
 import { getVehicleAvailabilityWithReasons } from '../lib/availability';
-import { canViewLoans, canViewAllVehicles } from '../lib/roles';
+import { canViewLoans, canViewAllVehicles, canExportFleet, canDownloadAttachments } from '../lib/roles';
 
 const prisma = new PrismaClient();
 
@@ -96,6 +96,11 @@ async function main() {
   console.log(`  finance 用户: ${finance ? '仍存在 ✗' : '已清除 ✓'}`);
   console.log(`  财务可看贷款: ${canViewLoans('FINANCE_READONLY') ? '✗ 仍放行' : '✓ 已关闭'}`);
   console.log(`  财务可看全车: ${canViewAllVehicles('FINANCE_READONLY') ? '✗ 仍放行' : '✓ 已关闭'}`);
+  console.log(`  财务可导出: ${canExportFleet('FINANCE_READONLY') ? '✗ 仍放行' : '✓ 已关闭'}`);
+  console.log(`  财务可下载附件: ${canDownloadAttachments('FINANCE_READONLY') ? '✗ 仍放行' : '✓ 已关闭'}`);
+  console.log(`  成员可导出: ${canExportFleet('VEHICLE_MEMBER') ? '✓' : '✗'}`);
+  console.log(`  管理员可导出: ${canExportFleet('ADMIN') ? '✓' : '✗'}`);
+  console.log(`  超管可导出: ${canExportFleet('SUPER_ADMIN') ? '✓' : '✗'}`);
   console.log(`  超管可看贷款: ${canViewLoans('SUPER_ADMIN') ? '✓' : '✗'}`);
 
   console.log('\n验收脚本完成');

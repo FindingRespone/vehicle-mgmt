@@ -1,5 +1,6 @@
 import { auth } from '@/lib/auth';
 import { buildFleetExportCsv } from '@/lib/export';
+import { canExportFleet } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -8,6 +9,10 @@ export async function GET() {
 
     if (!session) {
       return NextResponse.json({ error: '未登录' }, { status: 401 });
+    }
+
+    if (!canExportFleet(session.user.role)) {
+      return NextResponse.json({ error: '无权限' }, { status: 403 });
     }
 
     const csv = '\uFEFF' + await buildFleetExportCsv(session.user.id, session.user.role);
