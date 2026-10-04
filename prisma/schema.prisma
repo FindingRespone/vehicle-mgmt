@@ -39,6 +39,7 @@ enum VehicleClass {
 
 enum AttachmentCategory {
   DRIVING_LICENSE
+  DRIVER_LICENSE
   VEHICLE_PHOTO
   INSURANCE
   LOAN_CONTRACT

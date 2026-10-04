@@ -95,7 +95,9 @@ export async function PUT(
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,
-        drivingLicenseMeta: data.drivingLicenseMeta || null,
+        ...(data.drivingLicenseMeta !== undefined
+          ? { drivingLicenseMeta: data.drivingLicenseMeta || null }
+          : {}),
         remark: data.remark || null,
         vin: data.vin || null,
         ...(data.ownerUserId ? { ownerUserId: data.ownerUserId } : {}),

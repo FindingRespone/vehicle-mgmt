@@ -4,11 +4,11 @@ import { canManageVehicles, canViewLoans, canViewAllVehicles } from '@/lib/roles
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import AttachmentSection from '@/components/AttachmentSection';
+import DrivingLicenseSection from '@/components/DrivingLicenseSection';
 import VehicleMemberManagement from '@/components/VehicleMemberManagement';
 import InsurancePolicySection from '@/components/InsurancePolicySection';
 import LoanSection from '@/components/LoanSection';
 import { getVehicleAvailabilityWithReasons } from '@/lib/availability';
-import { parseDrivingLicenseMeta } from '@/lib/drivingLicense';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -72,6 +72,7 @@ export default async function VehicleDetailPage({
         },
         select: {
           category: true,
+          supersededAt: true,
         },
       },
     },
@@ -93,16 +94,12 @@ export default async function VehicleDetailPage({
     }
   }
 
-  const hasDrivingLicense = vehicle.attachments.some(a => a.category === 'DRIVING_LICENSE');
+  const hasDrivingLicenseFront = vehicle.attachments.some(a => a.category === 'DRIVING_LICENSE' && !a.supersededAt);
   const hasVehiclePhoto = vehicle.attachments.some(a => a.category === 'VEHICLE_PHOTO');
-  const isMissingDocs = !hasDrivingLicense || !hasVehiclePhoto;
+  const isMissingDocs = !hasDrivingLicenseFront || !hasVehiclePhoto;
 
   // Get availability reasons
   const availabilityInfo = await getVehicleAvailabilityWithReasons(vehicle.id, session.user.role);
-  const licenseMeta = parseDrivingLicenseMeta(vehicle.drivingLicenseMeta);
-  const hasLicenseMeta = Boolean(
-    licenseMeta.licenseNo || licenseMeta.vehicleType || licenseMeta.ownerName || licenseMeta.useNature
-  );
 
   return (
     <div className="space-y-6">
@@ -221,36 +218,7 @@ export default async function VehicleDetailPage({
             </dl>
           </div>
 
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              行驶证摘要
-            </h2>
-            {hasLicenseMeta ? (
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">证号</dt>
-                  <dd className="text-sm text-gray-900">{licenseMeta.licenseNo || <span className="text-gray-400">未填写</span>}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车辆类型</dt>
-                  <dd className="text-sm text-gray-900">{licenseMeta.vehicleType || <span className="text-gray-400">未填写</span>}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">所有人</dt>
-                  <dd className="text-sm text-gray-900">{licenseMeta.ownerName || <span className="text-gray-400">未填写</span>}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">使用性质</dt>
-                  <dd className="text-sm text-gray-900">{licenseMeta.useNature || <span className="text-gray-400">未填写</span>}</dd>
-                </div>
-              </dl>
-            ) : (
-              <p className="text-sm text-gray-400">未填写行驶证摘要</p>
-            )}
-          </div>
+          <DrivingLicenseSection vehicleId={vehicle.id} canManage={isManager} />
 
           <div className="card p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -372,7 +340,7 @@ export default async function VehicleDetailPage({
                   <dd>
                     <span 
                       className="badge bg-yellow-100 text-yellow-800 cursor-help" 
-                      title={`缺少：${!hasDrivingLicense ? '行驶证图片' : ''}${!hasDrivingLicense && !hasVehiclePhoto ? '、' : ''}${!hasVehiclePhoto ? '车辆外观照片' : ''}`}
+                      title={`缺少：${!hasDrivingLicenseFront ? '行驶证正面图' : ''}${!hasDrivingLicenseFront && !hasVehiclePhoto ? '、' : ''}${!hasVehiclePhoto ? '车辆外观照片' : ''}`}
                     >
                       影像不完整
                     </span>

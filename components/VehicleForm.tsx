@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { parseDrivingLicenseMeta, serializeDrivingLicenseMeta } from '@/lib/drivingLicense';
 
 export default function VehicleForm({
   vehicle,
@@ -14,8 +13,6 @@ export default function VehicleForm({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const existingLicense = parseDrivingLicenseMeta(vehicle?.drivingLicenseMeta);
 
   const [formData, setFormData] = useState({
     plateNo: vehicle?.plateNo || '',
@@ -29,10 +26,6 @@ export default function VehicleForm({
     annualInspectionDueAt: vehicle?.annualInspectionDueAt
       ? new Date(vehicle.annualInspectionDueAt).toISOString().split('T')[0]
       : '',
-    licenseNo: existingLicense.licenseNo || '',
-    licenseVehicleType: existingLicense.vehicleType || '',
-    licenseOwnerName: existingLicense.ownerName || '',
-    licenseUseNature: existingLicense.useNature || '',
     remark: vehicle?.remark || '',
   });
 
@@ -73,12 +66,6 @@ export default function VehicleForm({
           annualInspectionDueAt: formData.annualInspectionDueAt
             ? new Date(formData.annualInspectionDueAt).toISOString()
             : null,
-          drivingLicenseMeta: serializeDrivingLicenseMeta({
-            licenseNo: formData.licenseNo,
-            vehicleType: formData.licenseVehicleType,
-            ownerName: formData.licenseOwnerName,
-            useNature: formData.licenseUseNature,
-          }),
           remark: formData.remark,
         }),
       });
@@ -263,76 +250,6 @@ export default function VehicleForm({
               <option value="RISK">风险</option>
               <option value="UNAVAILABLE">不可用</option>
             </select>
-          </div>
-        </div>
-      </div>
-
-      <div className="card p-6">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            行驶证摘要
-          </h2>
-          <p className="mt-1 text-sm text-gray-600">选填，仅记录摘要，不新开列</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label htmlFor="licenseNo" className="block text-sm font-medium text-gray-700 mb-2">
-              证号
-            </label>
-            <input
-              type="text"
-              name="licenseNo"
-              id="licenseNo"
-              value={formData.licenseNo}
-              onChange={handleChange}
-              placeholder="行驶证号"
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label htmlFor="licenseVehicleType" className="block text-sm font-medium text-gray-700 mb-2">
-              车辆类型
-            </label>
-            <input
-              type="text"
-              name="licenseVehicleType"
-              id="licenseVehicleType"
-              value={formData.licenseVehicleType}
-              onChange={handleChange}
-              placeholder="如：重型厢式货车"
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label htmlFor="licenseOwnerName" className="block text-sm font-medium text-gray-700 mb-2">
-              所有人
-            </label>
-            <input
-              type="text"
-              name="licenseOwnerName"
-              id="licenseOwnerName"
-              value={formData.licenseOwnerName}
-              onChange={handleChange}
-              className="input-field"
-            />
-          </div>
-          <div>
-            <label htmlFor="licenseUseNature" className="block text-sm font-medium text-gray-700 mb-2">
-              使用性质
-            </label>
-            <input
-              type="text"
-              name="licenseUseNature"
-              id="licenseUseNature"
-              value={formData.licenseUseNature}
-              onChange={handleChange}
-              placeholder="如：货运"
-              className="input-field"
-            />
           </div>
         </div>
       </div>

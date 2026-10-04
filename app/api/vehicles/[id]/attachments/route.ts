@@ -105,7 +105,7 @@ export async function POST(
       return NextResponse.json({ error: '未选择类别' }, { status: 400 });
     }
 
-    const validCategories = ['DRIVING_LICENSE', 'VEHICLE_PHOTO', 'INSURANCE', 'LOAN_CONTRACT', 'OTHER'];
+    const validCategories = ['DRIVING_LICENSE', 'DRIVER_LICENSE', 'VEHICLE_PHOTO', 'INSURANCE', 'LOAN_CONTRACT', 'OTHER'];
     if (!validCategories.includes(category)) {
       return NextResponse.json({ error: '无效的类别' }, { status: 400 });
     }
@@ -114,7 +114,7 @@ export async function POST(
       return NextResponse.json({ error: '只有超级管理员可以上传贷款合同' }, { status: 403 });
     }
 
-    type AttachmentCategory = 'DRIVING_LICENSE' | 'VEHICLE_PHOTO' | 'INSURANCE' | 'LOAN_CONTRACT' | 'OTHER';
+    type AttachmentCategory = 'DRIVING_LICENSE' | 'DRIVER_LICENSE' | 'VEHICLE_PHOTO' | 'INSURANCE' | 'LOAN_CONTRACT' | 'OTHER';
     const attachmentCategory = category as AttachmentCategory;
 
     const maxSize = 10 * 1024 * 1024; // 10MB
