@@ -16,7 +16,6 @@ interface Attachment {
 }
 
 interface DrivingLicenseMeta {
-  licenseNo?: string;
   vehicleType?: string;
   ownerName?: string;
   useNature?: string;
@@ -31,6 +30,8 @@ export default function DrivingLicenseSection({
 }) {
   const router = useRouter();
 
+  const [vin, setVin] = useState('');
+  const [brandModel, setBrandModel] = useState('');
   const [meta, setMeta] = useState<DrivingLicenseMeta>({});
   const [frontImages, setFrontImages] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,9 +41,10 @@ export default function DrivingLicenseSection({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    licenseNo: '',
-    vehicleType: '',
     ownerName: '',
+    vin: '',
+    brandModel: '',
+    vehicleType: '',
     useNature: '',
   });
   const [uploadedAttachmentId, setUploadedAttachmentId] = useState<string | null>(null);
@@ -56,6 +58,8 @@ export default function DrivingLicenseSection({
       const response = await fetch(`/api/vehicles/${vehicleId}/driving-license`);
       if (response.ok) {
         const data = await response.json();
+        setVin(data.vin || '');
+        setBrandModel(data.brandModel || '');
         setMeta(data.meta || {});
         setFrontImages(data.frontImages || []);
       }
@@ -68,32 +72,30 @@ export default function DrivingLicenseSection({
 
   const activeFrontImages = frontImages.filter((a) => !a.supersededAt);
   const historyFrontImages = frontImages.filter((a) => a.supersededAt);
-  const hasMeta = Boolean(meta.licenseNo || meta.vehicleType || meta.ownerName || meta.useNature);
+  const hasMeta = Boolean(meta.vehicleType || meta.ownerName || meta.useNature);
   const hasFrontImage = activeFrontImages.length > 0;
-  const hasRecord = hasMeta || frontImages.length > 0;
+  const hasRecord = hasMeta || Boolean(vin) || Boolean(brandModel) || frontImages.length > 0;
+
+  const currentForm = () => ({
+    ownerName: meta.ownerName || '',
+    vin,
+    brandModel,
+    vehicleType: meta.vehicleType || '',
+    useNature: meta.useNature || '',
+  });
 
   const resetForm = () => {
     setShowForm(false);
     setUploadedAttachmentId(null);
     setError('');
-    setFormData({
-      licenseNo: meta.licenseNo || '',
-      vehicleType: meta.vehicleType || '',
-      ownerName: meta.ownerName || '',
-      useNature: meta.useNature || '',
-    });
+    setFormData(currentForm());
   };
 
   const openForm = () => {
     setError('');
     setSuccess('');
     setUploadedAttachmentId(null);
-    setFormData({
-      licenseNo: meta.licenseNo || '',
-      vehicleType: meta.vehicleType || '',
-      ownerName: meta.ownerName || '',
-      useNature: meta.useNature || '',
-    });
+    setFormData(currentForm());
     setShowForm(true);
   };
 
@@ -155,6 +157,8 @@ export default function DrivingLicenseSection({
       }
 
       const data = await response.json();
+      setVin(data.vin || '');
+      setBrandModel(data.brandModel || '');
       setMeta(data.meta || {});
       setFrontImages(data.frontImages || []);
       setSuccess('行驶证信息已保存');
@@ -241,13 +245,32 @@ export default function DrivingLicenseSection({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">证号</label>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">所有人</label>
               <input
                 type="text"
-                value={formData.licenseNo}
-                onChange={(e) => setFormData({ ...formData, licenseNo: e.target.value })}
+                value={formData.ownerName}
+                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
                 className="input-field text-sm"
-                placeholder="行驶证号"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">车架号 (VIN)</label>
+              <input
+                type="text"
+                value={formData.vin}
+                onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
+                className="input-field text-sm"
+                placeholder="17位车架号"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">品牌型号</label>
+              <input
+                type="text"
+                value={formData.brandModel}
+                onChange={(e) => setFormData({ ...formData, brandModel: e.target.value })}
+                className="input-field text-sm"
+                placeholder="例: 东风天龙 DFL3310A"
               />
             </div>
             <div>
@@ -258,15 +281,6 @@ export default function DrivingLicenseSection({
                 onChange={(e) => setFormData({ ...formData, vehicleType: e.target.value })}
                 className="input-field text-sm"
                 placeholder="如：重型厢式货车"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1.5">所有人</label>
-              <input
-                type="text"
-                value={formData.ownerName}
-                onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
-                className="input-field text-sm"
               />
             </div>
             <div>
@@ -341,16 +355,20 @@ export default function DrivingLicenseSection({
         <div className="space-y-4">
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">证号</dt>
-              <dd className="text-sm text-gray-900">{meta.licenseNo || <span className="text-gray-400">未填写</span>}</dd>
+              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">所有人</dt>
+              <dd className="text-sm text-gray-900">{meta.ownerName || <span className="text-gray-400">未填写</span>}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车架号 (VIN)</dt>
+              <dd className="text-sm text-gray-900">{vin || <span className="text-gray-400">未填写</span>}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">品牌型号</dt>
+              <dd className="text-sm text-gray-900">{brandModel || <span className="text-gray-400">未填写</span>}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车辆类型</dt>
               <dd className="text-sm text-gray-900">{meta.vehicleType || <span className="text-gray-400">未填写</span>}</dd>
-            </div>
-            <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">所有人</dt>
-              <dd className="text-sm text-gray-900">{meta.ownerName || <span className="text-gray-400">未填写</span>}</dd>
             </div>
             <div>
               <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">使用性质</dt>

@@ -63,6 +63,8 @@ export async function GET(
     const frontImages = await loadFrontImages(id);
 
     return NextResponse.json({
+      vin: vehicle.vin || '',
+      brandModel: vehicle.brandModel || '',
       meta: parseDrivingLicenseMeta(vehicle.drivingLicenseMeta),
       frontImages,
     });
@@ -98,11 +100,12 @@ export async function PUT(
 
     const data = await request.json();
     const meta = serializeDrivingLicenseMeta({
-      licenseNo: data.licenseNo,
       vehicleType: data.vehicleType,
       ownerName: data.ownerName,
       useNature: data.useNature,
     });
+    const vin = typeof data.vin === 'string' && data.vin.trim() ? data.vin.trim() : null;
+    const brandModel = typeof data.brandModel === 'string' ? data.brandModel.trim() : '';
 
     const existingFront = await prisma.attachment.findFirst({
       where: {
@@ -146,6 +149,8 @@ export async function PUT(
     const updated = await prisma.vehicle.update({
       where: { id },
       data: {
+        vin,
+        brandModel,
         drivingLicenseMeta: meta,
       },
     });
@@ -158,6 +163,8 @@ export async function PUT(
         entityType: 'Vehicle',
         entityId: id,
         changes: {
+          vin,
+          brandModel,
           drivingLicenseMeta: meta,
           attachmentId: data.attachmentId || null,
         },
@@ -167,6 +174,8 @@ export async function PUT(
     const frontImages = await loadFrontImages(id);
 
     return NextResponse.json({
+      vin: updated.vin || '',
+      brandModel: updated.brandModel || '',
       meta: parseDrivingLicenseMeta(updated.drivingLicenseMeta),
       frontImages,
     });

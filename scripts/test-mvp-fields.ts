@@ -34,8 +34,9 @@ async function main() {
     },
   });
   const parsed = parseDrivingLicenseMeta(updated.drivingLicenseMeta);
-  console.log(`  摘要: ${parsed.licenseNo} / ${parsed.vehicleType} / ${parsed.ownerName} / ${parsed.useNature}`);
-  console.log(parsed.licenseNo ? '  ✓ 行驶证摘要可读写' : '  ✗ 行驶证摘要失败');
+  console.log(`  摘要: ${parsed.vehicleType} / ${parsed.ownerName} / ${parsed.useNature}`);
+  console.log('licenseNo' in parsed ? '  ✗ 仍读出证号' : '  ✓ 已忽略旧证号');
+  console.log(parsed.ownerName && parsed.vehicleType && parsed.useNature ? '  ✓ 行驶证摘要可读写' : '  ✗ 行驶证摘要失败');
   await prisma.vehicle.update({
     where: { id: vehicle.id },
     data: { drivingLicenseMeta: Prisma.DbNull },

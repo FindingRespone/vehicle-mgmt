@@ -18,7 +18,7 @@ export async function POST(request: Request) {
       data: {
         plateNo: data.plateNo,
         vin: data.vin || null,
-        brandModel: data.brandModel,
+        brandModel: data.brandModel || '',
         powerType: data.powerType || null,
         vehicleClass: data.vehicleClass || null,
         status: data.status || 'IN_USE',

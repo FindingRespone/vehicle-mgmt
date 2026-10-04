@@ -86,7 +86,7 @@ export async function PUT(
     const vehicle = await prisma.vehicle.update({
       where: { id },
       data: {
-        brandModel: data.brandModel,
+        ...(data.brandModel !== undefined ? { brandModel: data.brandModel } : {}),
         powerType: data.powerType || null,
         vehicleClass: data.vehicleClass || null,
         status: data.status,
@@ -99,7 +99,7 @@ export async function PUT(
           ? { drivingLicenseMeta: data.drivingLicenseMeta || null }
           : {}),
         remark: data.remark || null,
-        vin: data.vin || null,
+        ...(data.vin !== undefined ? { vin: data.vin || null } : {}),
         ...(data.ownerUserId ? { ownerUserId: data.ownerUserId } : {}),
       },
     });

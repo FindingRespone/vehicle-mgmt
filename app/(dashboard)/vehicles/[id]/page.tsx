@@ -156,14 +156,6 @@ export default async function VehicleDetailPage({
                 <dd className="text-sm font-semibold text-gray-900">{vehicle.plateNo}</dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">车架号 (VIN)</dt>
-                <dd className="text-sm text-gray-900">{vehicle.vin || <span className="text-gray-400">未填写</span>}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">品牌型号</dt>
-                <dd className="text-sm font-medium text-gray-900">{vehicle.brandModel}</dd>
-              </div>
-              <div>
                 <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">司机</dt>
                 <dd className="text-sm text-gray-900">
                   {vehicle.driver ? (

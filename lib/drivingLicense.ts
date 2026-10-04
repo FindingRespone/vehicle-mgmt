@@ -1,5 +1,4 @@
 export interface DrivingLicenseMeta {
-  licenseNo?: string;
   vehicleType?: string;
   ownerName?: string;
   useNature?: string;
@@ -17,7 +16,6 @@ export function parseDrivingLicenseMeta(value: unknown): DrivingLicenseMeta {
   };
 
   return {
-    licenseNo: pick('licenseNo'),
     vehicleType: pick('vehicleType'),
     ownerName: pick('ownerName'),
     useNature: pick('useNature'),

@@ -16,8 +16,6 @@ export default function VehicleForm({
 
   const [formData, setFormData] = useState({
     plateNo: vehicle?.plateNo || '',
-    vin: vehicle?.vin || '',
-    brandModel: vehicle?.brandModel || '',
     powerType: vehicle?.powerType || '',
     vehicleClass: vehicle?.vehicleClass || '',
     status: vehicle?.status || 'IN_USE',
@@ -56,8 +54,6 @@ export default function VehicleForm({
         },
         body: JSON.stringify({
           plateNo: formData.plateNo,
-          vin: formData.vin,
-          brandModel: formData.brandModel,
           powerType: formData.powerType,
           vehicleClass: formData.vehicleClass,
           status: formData.status,
@@ -133,38 +129,6 @@ export default function VehicleForm({
                 车牌号创建后不可修改
               </p>
             )}
-          </div>
-
-          <div>
-            <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-2">
-              车架号 (VIN) <span className="text-gray-400 text-xs">选填</span>
-            </label>
-            <input
-              type="text"
-              name="vin"
-              id="vin"
-              value={formData.vin}
-              onChange={handleChange}
-              placeholder="17位车架号"
-              className="input-field"
-            />
-            <p className="mt-1.5 text-xs text-gray-500">车辆识别代码，可留空</p>
-          </div>
-
-          <div className="md:col-span-2">
-            <label htmlFor="brandModel" className="block text-sm font-medium text-gray-700 mb-2">
-              品牌型号 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              name="brandModel"
-              id="brandModel"
-              required
-              value={formData.brandModel}
-              onChange={handleChange}
-              placeholder="例: 东风天龙 DFL3310A"
-              className="input-field"
-            />
           </div>
 
           <div className="md:col-span-2">
