@@ -9,6 +9,7 @@ import VehicleMemberManagement from '@/components/VehicleMemberManagement';
 import InsurancePolicySection from '@/components/InsurancePolicySection';
 import LoanSection from '@/components/LoanSection';
 import { getVehicleAvailabilityWithReasons } from '@/lib/availability';
+import { formatVehicleClass } from '@/lib/vehicleClass';
 
 const statusLabels = {
   IN_USE: '使用中',
@@ -26,11 +27,6 @@ const availabilityLabels = {
 const powerTypeLabels = {
   EV: '电车',
   FUEL: '油车',
-};
-
-const vehicleClassLabels = {
-  TRUCK_4_2: '4.2米货车',
-  OTHER: '其他车型',
 };
 
 export default async function VehicleDetailPage({
@@ -200,7 +196,7 @@ export default async function VehicleDetailPage({
                 <dd>
                   {vehicle.vehicleClass ? (
                     <span className="badge bg-indigo-100 text-indigo-700">
-                      {vehicleClassLabels[vehicle.vehicleClass as keyof typeof vehicleClassLabels]}
+                      {formatVehicleClass(vehicle.vehicleClass)}
                     </span>
                   ) : (
                     <span className="text-sm text-gray-400">未填写</span>

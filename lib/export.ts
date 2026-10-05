@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { canViewAllVehicles, canViewLoans } from '@/lib/roles';
 import { csvRow, formatDateOnly } from '@/lib/csv';
 import { parseDrivingLicenseMeta } from '@/lib/drivingLicense';
+import { formatVehicleClass } from '@/lib/vehicleClass';
 
 const statusLabels: Record<string, string> = {
   IN_USE: '使用中',
@@ -58,6 +59,7 @@ export async function buildFleetExportCsv(userId: string, role: string): Promise
     '车牌号',
     'VIN',
     '品牌型号',
+    '车辆类型',
     '司机',
     '负责人',
     '状态',
@@ -75,6 +77,7 @@ export async function buildFleetExportCsv(userId: string, role: string): Promise
       vehicle.plateNo,
       vehicle.vin || '',
       vehicle.brandModel,
+      formatVehicleClass(vehicle.vehicleClass),
       vehicle.driver || '',
       vehicle.owner.name,
       statusLabels[vehicle.status] || vehicle.status,

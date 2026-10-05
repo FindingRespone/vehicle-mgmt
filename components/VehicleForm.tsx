@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { VEHICLE_CLASS_OPTIONS } from '@/lib/vehicleClass';
 
 export default function VehicleForm({
   vehicle,
@@ -176,8 +177,11 @@ export default function VehicleForm({
               className="input-field"
             >
               <option value="">请选择</option>
-              <option value="TRUCK_4_2">4.2米货车</option>
-              <option value="OTHER">其他车型</option>
+              {VEHICLE_CLASS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 

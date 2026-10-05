@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { calculateVehicleAvailabilityFromData } from '@/lib/availability';
 import { canExportFleet, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { formatVehicleClass } from '@/lib/vehicleClass';
 import ExportButton from '@/components/ExportButton';
 import Link from 'next/link';
 import { VehicleStatus, VehicleAvailability } from '@prisma/client';
@@ -24,10 +25,6 @@ const powerTypeLabels = {
   FUEL: '油车',
 };
 
-const vehicleClassLabels = {
-  TRUCK_4_2: '4.2米货车',
-  OTHER: '其他车型',
-};
 
 type InsuranceStatus = 'EXPIRED' | 'EXPIRING' | 'NORMAL' | 'NONE';
 type InspectionStatus = 'EXPIRED' | 'EXPIRING' | 'NORMAL' | 'NONE';
@@ -412,7 +409,7 @@ export default async function VehiclesPage({
                     <td className="px-6 py-4 whitespace-nowrap">
                       {vehicle.vehicleClass ? (
                         <span className="badge bg-indigo-100 text-indigo-700">
-                          {vehicleClassLabels[vehicle.vehicleClass as keyof typeof vehicleClassLabels]}
+                          {formatVehicleClass(vehicle.vehicleClass)}
                         </span>
                       ) : (
                         <div className="text-sm text-gray-400">-</div>
