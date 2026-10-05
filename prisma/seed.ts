@@ -63,6 +63,18 @@ async function main() {
 
   console.log('创建超级管理员用户:', superadmin);
 
+  const removedFinance = await prisma.user.deleteMany({
+    where: {
+      OR: [
+        { username: 'finance' },
+        { role: 'FINANCE_READONLY' },
+      ],
+    },
+  });
+  if (removedFinance.count > 0) {
+    console.log(`已清除财务只读账号: ${removedFinance.count}`);
+  }
+
   const vehicle = await prisma.vehicle.upsert({
     where: { plateNo: '京A12345' },
     update: {},
@@ -71,6 +83,7 @@ async function main() {
       brandModel: '解放J6P',
       status: 'IN_USE',
       availability: 'AVAILABLE',
+      driver: '张师傅',
       ownerUserId: admin.id,
       annualInspectionDueAt: new Date('2025-12-31'),
       remark: '示例车辆',

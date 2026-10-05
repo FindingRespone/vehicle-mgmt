@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
@@ -17,15 +18,17 @@ export async function POST(request: Request) {
       data: {
         plateNo: data.plateNo,
         vin: data.vin || null,
-        brandModel: data.brandModel,
+        brandModel: data.brandModel || '',
         powerType: data.powerType || null,
         vehicleClass: data.vehicleClass || null,
         status: data.status || 'IN_USE',
         availability: data.availability || 'AVAILABLE',
+        driver: data.driver || null,
         ownerUserId: data.ownerUserId || session.user!.id,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,
+        drivingLicenseMeta: data.drivingLicenseMeta || null,
         remark: data.remark || null,
       },
     });
@@ -41,7 +44,15 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json(vehicle);
+    // Update availability based on current conditions
+    await updateVehicleAvailability(vehicle.id);
+
+    // Fetch the updated vehicle to return the correct availability
+    const updatedVehicle = await prisma.vehicle.findUnique({
+      where: { id: vehicle.id },
+    });
+
+    return NextResponse.json(updatedVehicle);
   } catch (error: any) {
     if (error.code === 'P2002') {
       return NextResponse.json({ error: '车牌号已存在' }, { status: 400 });
@@ -60,7 +71,7 @@ export async function GET(request: Request) {
 
     let vehicles;
 
-    if (isAdminOrAbove(session.user!.role)) {
+    if (canViewAllVehicles(session.user!.role)) {
       vehicles = await prisma.vehicle.findMany({
         include: {
           owner: {

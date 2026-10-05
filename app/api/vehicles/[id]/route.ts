@@ -1,6 +1,8 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { invalidateOldReminders } from '@/lib/reminders';
+import { updateVehicleAvailability } from '@/lib/availability';
 import { NextResponse } from 'next/server';
 
 export async function GET(
@@ -42,7 +44,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (!isAdminOrAbove(session.user.role)) {
+    if (!canViewAllVehicles(session.user.role)) {
       const isMember = vehicle.members.some(
         (m) => m.userId === session.user.id
       );
@@ -71,22 +73,53 @@ export async function PUT(
 
     const data = await request.json();
 
+    // Fetch old vehicle data to check if annualInspectionDueAt changed
+    const oldVehicle = await prisma.vehicle.findUnique({
+      where: { id },
+      select: { annualInspectionDueAt: true },
+    });
+
+    if (!oldVehicle) {
+      return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
+    }
+
     const vehicle = await prisma.vehicle.update({
       where: { id },
       data: {
-        brandModel: data.brandModel,
+        ...(data.brandModel !== undefined ? { brandModel: data.brandModel } : {}),
         powerType: data.powerType || null,
         vehicleClass: data.vehicleClass || null,
         status: data.status,
         availability: data.availability,
+        driver: data.driver || null,
         annualInspectionDueAt: data.annualInspectionDueAt
           ? new Date(data.annualInspectionDueAt)
           : null,
+        ...(data.drivingLicenseMeta !== undefined
+          ? { drivingLicenseMeta: data.drivingLicenseMeta || null }
+          : {}),
         remark: data.remark || null,
-        vin: data.vin || null,
+        ...(data.vin !== undefined ? { vin: data.vin || null } : {}),
         ...(data.ownerUserId ? { ownerUserId: data.ownerUserId } : {}),
       },
     });
+
+    // Invalidate old reminders if annualInspectionDueAt changed
+    if (data.annualInspectionDueAt) {
+      const newDate = new Date(data.annualInspectionDueAt).getTime();
+      const oldDate = oldVehicle.annualInspectionDueAt?.getTime();
+      
+      if (newDate !== oldDate) {
+        await invalidateOldReminders({
+          vehicleId: id,
+          sourceType: 'AnnualInspection',
+          sourceId: id,
+        });
+      }
+    }
+
+    // Update vehicle availability based on inspection status
+    await updateVehicleAvailability(id);
 
     await prisma.auditLog.create({
       data: {

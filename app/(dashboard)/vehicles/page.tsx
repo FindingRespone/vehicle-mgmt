@@ -1,5 +1,9 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { calculateVehicleAvailabilityFromData } from '@/lib/availability';
+import { canExportFleet, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
+import { formatVehicleClass } from '@/lib/vehicleClass';
+import ExportButton from '@/components/ExportButton';
 import Link from 'next/link';
 import { VehicleStatus, VehicleAvailability } from '@prisma/client';
 
@@ -21,12 +25,9 @@ const powerTypeLabels = {
   FUEL: '油车',
 };
 
-const vehicleClassLabels = {
-  TRUCK_4_2: '4.2米货车',
-  OTHER: '其他车型',
-};
 
 type InsuranceStatus = 'EXPIRED' | 'EXPIRING' | 'NORMAL' | 'NONE';
+type InspectionStatus = 'EXPIRED' | 'EXPIRING' | 'NORMAL' | 'NONE';
 
 interface SearchParams {
   page?: string;
@@ -60,7 +61,7 @@ export default async function VehiclesPage({
   let where: any = {};
 
   // RBAC: Filter by user permissions
-  if (session.user.role !== 'ADMIN' && session.user.role !== 'SUPER_ADMIN') {
+  if (!canViewAllVehicles(session.user.role)) {
     where.OR = [
       { ownerUserId: session.user.id },
       {
@@ -131,6 +132,18 @@ export default async function VehiclesPage({
             insuranceType: true,
           },
         },
+        loans: {
+          select: {
+            installments: {
+              where: {
+                paidAt: null,
+              },
+              select: {
+                dueDate: true,
+              },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -169,6 +182,30 @@ export default async function VehiclesPage({
     return 'NORMAL';
   };
 
+  // Helper function to calculate inspection status
+  const getInspectionStatus = (annualInspectionDueAt: Date | null): InspectionStatus => {
+    if (!annualInspectionDueAt) {
+      return 'NONE';
+    }
+
+    const now = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    const dueDate = new Date(annualInspectionDueAt);
+
+    // Check if expired
+    if (dueDate < now) {
+      return 'EXPIRED';
+    }
+
+    // Check if expiring within 30 days
+    if (dueDate >= now && dueDate <= thirtyDaysFromNow) {
+      return 'EXPIRING';
+    }
+
+    return 'NORMAL';
+  };
+
   // Filter vehicles by insurance status if needed
   let filteredVehicles = vehicles;
   if (insuranceStatusFilter) {
@@ -191,17 +228,20 @@ export default async function VehiclesPage({
             共 <span className="font-semibold mx-1">{totalCount}</span> 辆车辆
           </p>
         </div>
-        {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && (
-          <Link
-            href="/vehicles/new"
-            className="btn btn-primary shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            新建车辆
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {canExportFleet(session.user.role) && <ExportButton />}
+          {canManageVehicles(session.user.role) && (
+            <Link
+              href="/vehicles/new"
+              className="btn btn-primary shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              新建车辆
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Search and Filters */}
@@ -272,7 +312,7 @@ export default async function VehiclesPage({
               ? '尝试调整搜索条件或清除筛选'
               : '还没有添加任何车辆信息'}
           </p>
-          {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && !search && !statusFilter && !availabilityFilter && !insuranceStatusFilter && (
+          {canManageVehicles(session.user.role) && !search && !statusFilter && !availabilityFilter && !insuranceStatusFilter && (
             <Link
               href="/vehicles/new"
               className="btn btn-primary inline-flex"
@@ -325,6 +365,17 @@ export default async function VehiclesPage({
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredVehicles.map((vehicle) => {
                   const insuranceStatus = getInsuranceStatus(vehicle.insurancePolicies);
+                  const inspectionStatus = getInspectionStatus(vehicle.annualInspectionDueAt);
+                  
+                  // Collect all unpaid installments across all loans
+                  const unpaidInstallments = vehicle.loans.flatMap(loan => loan.installments);
+                  
+                  const availabilityInfo = calculateVehicleAvailabilityFromData(
+                    vehicle,
+                    vehicle.insurancePolicies,
+                    unpaidInstallments
+                  );
+                  
                   return (
                   <tr key={vehicle.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -358,7 +409,7 @@ export default async function VehiclesPage({
                     <td className="px-6 py-4 whitespace-nowrap">
                       {vehicle.vehicleClass ? (
                         <span className="badge bg-indigo-100 text-indigo-700">
-                          {vehicleClassLabels[vehicle.vehicleClass as keyof typeof vehicleClassLabels]}
+                          {formatVehicleClass(vehicle.vehicleClass)}
                         </span>
                       ) : (
                         <div className="text-sm text-gray-400">-</div>
@@ -382,14 +433,14 @@ export default async function VehiclesPage({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`badge ${
-                          vehicle.availability === 'AVAILABLE'
+                          availabilityInfo.availability === 'AVAILABLE'
                             ? 'bg-blue-100 text-blue-700'
-                            : vehicle.availability === 'RISK'
+                            : availabilityInfo.availability === 'RISK'
                             ? 'bg-red-100 text-red-700'
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {availabilityLabels[vehicle.availability]}
+                        {availabilityLabels[availabilityInfo.availability]}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -417,13 +468,26 @@ export default async function VehiclesPage({
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {vehicle.annualInspectionDueAt ? (
-                        <div className="text-sm text-gray-900">
-                          {new Date(vehicle.annualInspectionDueAt).toLocaleDateString('zh-CN')}
-                        </div>
-                      ) : (
-                        <div className="text-sm text-gray-400">-</div>
-                      )}
+                      <span
+                        className={`badge ${
+                          inspectionStatus === 'EXPIRED'
+                            ? 'bg-red-100 text-red-700'
+                            : inspectionStatus === 'EXPIRING'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : inspectionStatus === 'NORMAL'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                        title={vehicle.annualInspectionDueAt ? new Date(vehicle.annualInspectionDueAt).toLocaleDateString('zh-CN') : '未设置'}
+                      >
+                        {inspectionStatus === 'EXPIRED'
+                          ? '已过期'
+                          : inspectionStatus === 'EXPIRING'
+                          ? '即将到期'
+                          : inspectionStatus === 'NORMAL'
+                          ? '正常'
+                          : '未设置'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <Link
@@ -432,7 +496,7 @@ export default async function VehiclesPage({
                       >
                         查看
                       </Link>
-                      {(session.user.role === 'ADMIN' || session.user.role === 'SUPER_ADMIN') && (
+                      {canManageVehicles(session.user.role) && (
                         <>
                           <span className="mx-2 text-gray-300">|</span>
                           <Link

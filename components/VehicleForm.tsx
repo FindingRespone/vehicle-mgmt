@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { VEHICLE_CLASS_OPTIONS } from '@/lib/vehicleClass';
 
 export default function VehicleForm({
   vehicle,
@@ -16,12 +17,11 @@ export default function VehicleForm({
 
   const [formData, setFormData] = useState({
     plateNo: vehicle?.plateNo || '',
-    vin: vehicle?.vin || '',
-    brandModel: vehicle?.brandModel || '',
     powerType: vehicle?.powerType || '',
     vehicleClass: vehicle?.vehicleClass || '',
     status: vehicle?.status || 'IN_USE',
     availability: vehicle?.availability || 'AVAILABLE',
+    driver: vehicle?.driver || '',
     annualInspectionDueAt: vehicle?.annualInspectionDueAt
       ? new Date(vehicle.annualInspectionDueAt).toISOString().split('T')[0]
       : '',
@@ -54,10 +54,16 @@ export default function VehicleForm({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          plateNo: formData.plateNo,
+          powerType: formData.powerType,
+          vehicleClass: formData.vehicleClass,
+          status: formData.status,
+          availability: formData.availability,
+          driver: formData.driver,
           annualInspectionDueAt: formData.annualInspectionDueAt
             ? new Date(formData.annualInspectionDueAt).toISOString()
             : null,
+          remark: formData.remark,
         }),
       });
 
@@ -126,36 +132,20 @@ export default function VehicleForm({
             )}
           </div>
 
-          <div>
-            <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-2">
-              车架号 (VIN) <span className="text-gray-400 text-xs">选填</span>
-            </label>
-            <input
-              type="text"
-              name="vin"
-              id="vin"
-              value={formData.vin}
-              onChange={handleChange}
-              placeholder="17位车架号"
-              className="input-field"
-            />
-            <p className="mt-1.5 text-xs text-gray-500">车辆识别代码，可留空</p>
-          </div>
-
           <div className="md:col-span-2">
-            <label htmlFor="brandModel" className="block text-sm font-medium text-gray-700 mb-2">
-              品牌型号 <span className="text-red-500">*</span>
+            <label htmlFor="driver" className="block text-sm font-medium text-gray-700 mb-2">
+              司机 <span className="text-gray-400 text-xs">选填</span>
             </label>
             <input
               type="text"
-              name="brandModel"
-              id="brandModel"
-              required
-              value={formData.brandModel}
+              name="driver"
+              id="driver"
+              value={formData.driver}
               onChange={handleChange}
-              placeholder="例: 东风天龙 DFL3310A"
+              placeholder="输入司机姓名"
               className="input-field"
             />
+            <p className="mt-1.5 text-xs text-gray-500">可以记录当前驾驶该车辆的司机</p>
           </div>
 
           <div>
@@ -187,8 +177,11 @@ export default function VehicleForm({
               className="input-field"
             >
               <option value="">请选择</option>
-              <option value="TRUCK_4_2">4.2米货车</option>
-              <option value="OTHER">其他车型</option>
+              {VEHICLE_CLASS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 

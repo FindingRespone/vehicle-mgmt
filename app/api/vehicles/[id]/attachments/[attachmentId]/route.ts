@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { canAccessLoanContract, canManageVehicles, isAdminOrAbove } from '@/lib/roles';
+import { canAccessLoanContract, canDownloadAttachments, canManageVehicles, canViewAllVehicles } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
@@ -17,6 +17,10 @@ export async function GET(
       return NextResponse.json({ error: '未登录' }, { status: 401 });
     }
 
+    if (!canDownloadAttachments(session.user.role)) {
+      return NextResponse.json({ error: '无权限' }, { status: 403 });
+    }
+
     const vehicle = await prisma.vehicle.findUnique({
       where: { id },
       include: {
@@ -30,7 +34,7 @@ export async function GET(
       return NextResponse.json({ error: '车辆不存在' }, { status: 404 });
     }
 
-    if (!isAdminOrAbove(session.user.role)) {
+    if (!canViewAllVehicles(session.user.role)) {
       const isMember = vehicle.members.some((m) => m.userId === session.user.id);
       if (vehicle.ownerUserId !== session.user.id && !isMember) {
         return NextResponse.json({ error: '无权限' }, { status: 403 });
@@ -55,6 +59,20 @@ export async function GET(
 
     const filepath = join(/*turbopackIgnore: true*/ process.cwd(), attachment.filepath);
     const fileBuffer = await readFile(filepath);
+
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        vehicleId: id,
+        action: 'DOWNLOAD_ATTACHMENT',
+        entityType: 'Attachment',
+        entityId: attachmentId,
+        changes: {
+          category: attachment.category,
+          filename: attachment.originalFilename,
+        },
+      },
+    });
 
     return new NextResponse(fileBuffer, {
       headers: {
